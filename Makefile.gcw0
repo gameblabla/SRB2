@@ -1,0 +1,53 @@
+PRGNAME     = srb2.elf
+
+# define regarding OS, which compiler to use
+CC          = /opt/gcw0-toolchain/usr/bin/mipsel-linux-gcc
+PORT		= sdl12
+HUGE_PAGES	= 1
+PROFILE		= YES
+
+# change compilation / linking flag options
+CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell sdl-config --cflags)
+CFLAGS		+= -fno-exceptions -Isrc -Isrc/$(PORT)
+CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_OPENMPT -DHAVE_ZLIB -DNDEBUG
+
+CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -fsingle-precision-constant -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2
+CFLAGS		+= -falign-functions=1 -falign-jumps=1 -falign-loops=1 -falign-labels=1
+
+ifeq ($(PROFILE), YES)
+CFLAGS		+= -fprofile-generate=/usr/local/home
+LDFLAGS		= -lgcov
+else ifeq ($(PROFILE), APPLY)
+CFLAGS		+= -fprofile-use
+endif
+
+LDFLAGS_SDL = $(shell sdl-config --libs) -lSDL_mixer
+
+ifeq ($(HUGE_PAGES), 0)
+LDFLAGS		+= -nodefaultlibs
+endif
+LDFLAGS     +=  -lc -lgcc $(LDFLAGS_SDL) -lpng -lrt -lgme -lcurl -lm -lopenmpt -lz -Wl,--as-needed -Wl,--gc-sections -flto -s
+ifeq ($(HUGE_PAGES), 1)
+LDFLAGS		+= -Wl,-zcommon-page-size=2097152 -Wl,-zmax-page-size=2097152 -lhugetlbfs
+endif
+
+# Files to be compiled
+SRCDIR    = ./src ./src/$(PORT) ./src/blua
+VPATH     = $(SRCDIR)
+SRC_C   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
+OBJ_C   = $(notdir $(patsubst %.c, %.o, $(SRC_C)))
+OBJS     = $(OBJ_C)
+
+# Rules to make executable
+$(PRGNAME): $(OBJS)  
+	$(CC) $^ -o $(PRGNAME) $(LDFLAGS)
+ifeq ($(HUGE_PAGES), 1)
+	hugeedit --text --data $(PRGNAME)
+endif
+
+$(OBJ_C) : %.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+
+clean:
+	rm -f *.o

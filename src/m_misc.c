@@ -52,7 +52,7 @@
 #endif
 
 #ifdef HAVE_SDL
-#include "sdl/hwsym_sdl.h"
+#include "hwsym_sdl.h"
 #ifdef __linux__
 #ifndef _LARGEFILE64_SOURCE
 typedef off_t off64_t;

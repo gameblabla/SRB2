@@ -1225,7 +1225,7 @@ boolean I_LoadSong(char *data, size_t len)
 	// Let's see if Mixer is able to load this.
 	rw = SDL_RWFromMem(data, len);
 	{
-		music = Mix_LoadMUS_RW(rw, 1);
+		music = Mix_LoadMUS_RW(rw);
 	}
 	if (!music)
 	{

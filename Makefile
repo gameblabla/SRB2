@@ -1,35 +1,32 @@
 PRGNAME     = srb2
 
 # define regarding OS, which compiler to use
-CC          = gcc
-CCP         = g++
-LD          = gcc
+CC          = cc
 
 # change compilation / linking flag options
-F_OPTS		= -Isrc -DHAVE_SDL -DHAVE_MIXER -DHAVE_PNG -DNOMUMBLE -DNONET -DNOIPX -DDNO_IPV6 -DSOUND=SOUND_SDL
-CC_OPTS		= -O2 -fomit-frame-pointer -fdata-sections -ffunction-sections $(F_OPTS)
-CFLAGS		= $(shell sdl-config --cflags) $(CC_OPTS)
-CXXFLAGS	= $(CFLAGS) 
-LDFLAGS     = -lSDL -llua -lpng -lm -Wl,--as-needed -Wl,--gc-sections -flto -lSDL_mixer -s
+CFLAGS		=  -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -I/usr/include/libpng16
+CFLAGS		+=  -fno-exceptions -Isrc/sdl12
+CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_OPENMPT -DHAVE_ZLIB -DNDEBUG
+CFLAGS		+= -DGCW0 -DNOPOSTPROCESSING -DLOWMEMORY
+
+CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -fsingle-precision-constant -flto
+
+LDFLAGS     =  $(shell sdl-config --libs)  -lpng -lrt -lgme -lcurl -lm -lopenmpt -lz -lSDL_mixer -flto -Wl,--as-needed -Wl,--gc-sections -s
 
 # Files to be compiled
 SRCDIR    = ./src ./src/sdl12 ./src/blua
 VPATH     = $(SRCDIR)
 SRC_C   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
-SRC_CP   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.cpp))
 OBJ_C   = $(notdir $(patsubst %.c, %.o, $(SRC_C)))
-OBJ_CP   = $(notdir $(patsubst %.cpp, %.o, $(SRC_CP)))
-OBJS     = $(OBJ_C) $(OBJ_CP)
+OBJS     = $(OBJ_C)
 
 # Rules to make executable
 $(PRGNAME): $(OBJS)  
-	$(LD) $(CFLAGS) -o $(PRGNAME) $^ $(LDFLAGS)
+	$(CC) $^ -o $(PRGNAME) $(LDFLAGS)
 
 $(OBJ_C) : %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(OBJ_CP) : %.o : %.cpp
-	$(CCP) $(CXXFLAGS) -c -o $@ $<
 
 clean:
 	rm -f *.o

@@ -20,8 +20,20 @@
 /// \file
 /// \brief SRB2 system stuff for SDL
 
+#include <errno.h>
+
+#ifdef CMAKECONFIG
+#include "config.h"
+#else
+#include "../config.h.in"
+#endif
+
 #ifndef _WIN32_WCE
 #include <signal.h>
+#endif
+
+#ifdef _XBOX
+#include "SRB2XBOX/xboxhelp.h"
 #endif
 
 #if defined (_WIN32) && !defined (_XBOX)
@@ -71,7 +83,7 @@ void __set_fpscr(long); // in libgcc / kernel's startup.s?
 
 #ifdef HAVE_SDL
 
-#include <SDL/SDL.h>
+#include "SDL.h"
 
 #ifdef HAVE_TTF
 #include "i_ttf.h"
@@ -82,7 +94,7 @@ void __set_fpscr(long); // in libgcc / kernel's startup.s?
 #endif
 
 #if SDL_VERSION_ATLEAST(1,2,7) && !defined (DC)
-#include <SDL/SDL_cpuinfo.h> // 1.2.7 or greater
+#include "SDL_cpuinfo.h" // 1.2.7 or greater
 #define HAVE_SDLCPUINFO
 #endif
 
@@ -213,7 +225,7 @@ void __set_fpscr(long); // in libgcc / kernel's startup.s?
 
 /**	\brief WAD file to look for
 */
-#define WADKEYWORD1 "srb2.srb"
+#define WADKEYWORD1 "srb2.pk3"
 #define WADKEYWORD2 "srb2.wad"
 /**	\brief holds wad path
 */
@@ -286,25 +298,6 @@ static INT32 joystick2_started = 0;
 /**	\brief SDL inof about joystick 2
 */
 SDLJoyInfo_t JoyInfo2;
-
-
-/**	\brief Third joystick up and running
-*/
-static INT32 joystick3_started = 0;
-
-/**	\brief SDL inof about joystick 3
-*/
-SDLJoyInfo_t JoyInfo3;
-
-
-/**	\brief Fourth joystick up and running
-*/
-static INT32 joystick4_started = 0;
-
-/**	\brief SDL inof about joystick 4
-*/
-SDLJoyInfo_t JoyInfo4;
-
 
 #ifdef HAVE_TERMIOS
 static INT32 fdmouse2 = -1;
@@ -697,7 +690,7 @@ static void I_StartupConsole(void)
 
 	if (gotConsole)
 	{
-		SetConsoleTitleA("SRB2Kart Console");
+		SetConsoleTitleA("SRB2 Console");
 		consolevent = SDL_TRUE;
 	}
 
@@ -945,14 +938,6 @@ void I_JoyScale2(void)
 	JoyInfo2.scale = Joystick2.bGamepadStyle?1:cv_joyscale2.value;
 }
 
-void I_JoyScale3(void)
-{
-}
-
-void I_JoyScale4(void)
-{
-}
-
 /**	\brief Joystick 1 buttons states
 */
 static UINT64 lastjoybuttons = 0;
@@ -1002,8 +987,7 @@ static void I_ShutdownJoystick(void)
 
 	joystick_started = 0;
 	JoyReset(&JoyInfo);
-	if (!joystick_started && !joystick2_started && !joystick3_started && !joystick4_started
-		&& SDL_WasInit(SDL_INIT_JOYSTICK) == SDL_INIT_JOYSTICK)
+	if (!joystick_started && !joystick2_started && SDL_WasInit(SDL_INIT_JOYSTICK) == SDL_INIT_JOYSTICK)
 	{
 		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 		if (cv_usejoystick.value == 0)
@@ -1164,7 +1148,7 @@ static int joy_open(const char *fname)
 	int num_joy = 0;
 	int i;
 
-	if (joystick_started == 0 && joystick2_started == 0 && joystick3_started == 0 && joystick4_started == 0)
+	if (joystick_started == 0 && joystick2_started == 0)
 	{
 		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
 		{
@@ -1297,8 +1281,7 @@ static void I_ShutdownJoystick2(void)
 	}
 
 	JoyReset(&JoyInfo2);
-	if (!joystick_started && !joystick2_started && !joystick3_started && !joystick4_started
-		&& SDL_WasInit(SDL_INIT_JOYSTICK) == SDL_INIT_JOYSTICK)
+	if (!joystick_started && !joystick2_started && SDL_WasInit(SDL_INIT_JOYSTICK) == SDL_INIT_JOYSTICK)
 	{
 		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 		if (cv_usejoystick2.value == 0)
@@ -1459,7 +1442,7 @@ static int joy_open2(const char *fname)
 	int num_joy = 0;
 	int i;
 
-	if (joystick_started == 0 && joystick2_started == 0 && joystick3_started == 0 && joystick4_started == 0)
+	if (joystick_started == 0 && joystick2_started == 0)
 	{
 		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == -1)
 		{
@@ -1482,7 +1465,7 @@ static int joy_open2(const char *fname)
 	{
 		JoyReset(&JoyInfo2);
 		//I_ShutdownJoystick();
-		//joy_open2(fname);
+		//joy_open(fname);
 	}
 
 	num_joy = SDL_NumJoysticks();
@@ -1542,79 +1525,6 @@ static int joy_open2(const char *fname)
 	}
 }
 
-//Joystick3
-
-/**	\brief Joystick 3 buttons states
-*/
-static UINT64 lastjoy3buttons = 0;
-
-/**	\brief Joystick 3 hats state
-*/
-static UINT64 lastjoy3hats = 0;
-
-/**	\brief	Shuts down joystick 3
-
-
-	\return	void
-*/
-static void I_ShutdownJoystick3(void)
-{
-}
-
-void I_GetJoystick3Events(void)
-{
-
-}
-
-/**	\brief	Open joystick handle
-
-	\param	fname	name of joystick
-
-	\return	axises
-
-
-*/
-static int joy_open3(const char *fname)
-{
-}
-
-//Joystick4
-
-/**	\brief Joystick 4 buttons states
-*/
-static UINT64 lastjoy4buttons = 0;
-
-/**	\brief Joystick 4 hats state
-*/
-static UINT64 lastjoy4hats = 0;
-
-/**	\brief	Shuts down joystick 4
-
-
-	\return	void
-*/
-static void I_ShutdownJoystick4(void)
-{
-	
-}
-
-void I_GetJoystick4Events(void)
-{
-
-}
-
-/**	\brief	Open joystick handle
-
-	\param	fname	name of joystick
-
-	\return	axises
-
-
-*/
-static int joy_open4(const char *fname)
-{
-}
-
 //
 // I_InitJoystick
 //
@@ -1648,22 +1558,12 @@ void I_InitJoystick2(void)
 	joystick2_started = 1;
 }
 
-void I_InitJoystick3(void)
-{
-}
-
-void I_InitJoystick4(void)
-{
-}
-
 static void I_ShutdownInput(void)
 {
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) == SDL_INIT_JOYSTICK)
 	{
 		JoyReset(&JoyInfo);
 		JoyReset(&JoyInfo2);
-		JoyReset(&JoyInfo3);
-		JoyReset(&JoyInfo4);
 		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 	}
 
@@ -1683,18 +1583,13 @@ INT32 I_NumJoys(void)
 	return numjoy;
 }
 
+static char joyname[255]; // MAX_PATH; joystick name is straight from the driver
+
 const char *I_GetJoyName(INT32 joyindex)
 {
-	const char *joyname = "NA";
+	const char *tempname = NULL;
 	joyindex--; //SDL's Joystick System starts at 0, not 1
-	if (SDL_WasInit(SDL_INIT_JOYSTICK) == 0)
-	{
-		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != -1)
-			joyname = SDL_JoystickName(joyindex);
-		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-	}
-	else
-		joyname = SDL_JoystickName(joyindex);
+	strncpy(joyname, "YES", 255);
 	return joyname;
 }
 
@@ -1770,7 +1665,7 @@ void I_UpdateMumble(const mobj_t *mobj, const listener_t listener)
 		return;
 
 	if(mumble->uiVersion != 2) {
-		wcsncpy(mumble->name, L"SRB2Kart "VERSIONSTRING, 256);
+		wcsncpy(mumble->name, L"SRB2 "VERSIONSTRING, 256);
 		wcsncpy(mumble->description, L"Sonic Robo Blast 2 with integrated Mumble Link support.", 2048);
 		mumble->uiVersion = 2;
 	}
@@ -2174,20 +2069,6 @@ void I_Tactile2(FFType pFFType, const JoyFF_t *FFEffect)
 	(void)FFEffect;
 }
 
-void I_Tactile3(FFType pFFType, const JoyFF_t *FFEffect)
-{
-	// UNUSED.
-	(void)pFFType;
-	(void)FFEffect;
-}
-
-void I_Tactile4(FFType pFFType, const JoyFF_t *FFEffect)
-{
-	// UNUSED.
-	(void)pFFType;
-	(void)FFEffect;
-}
-
 /**	\brief empty ticcmd for player 1
 */
 static ticcmd_t emptycmd;
@@ -2204,24 +2085,6 @@ static ticcmd_t emptycmd2;
 ticcmd_t *I_BaseTiccmd2(void)
 {
 	return &emptycmd2;
-}
-
-/**	\brief empty ticcmd for player 3
-*/
-static ticcmd_t emptycmd3;
-
-ticcmd_t *I_BaseTiccmd3(void)
-{
-	return &emptycmd3;
-}
-
-/**	\brief empty ticcmd for player 4
-*/
-static ticcmd_t emptycmd4;
-
-ticcmd_t *I_BaseTiccmd4(void)
-{
-	return &emptycmd4;
 }
 
 #if defined (_WIN32)
@@ -2310,8 +2173,8 @@ int TimeFunction(int requested_frequency)
 	static Uint64 basetime = 0;
 	       Uint64 ticks = timer_ms_gettime64(); //using timer_ms_gettime64 instand of SDL_GetTicks for the Dreamcast
 #else
-	static Uint32 basetime = 0;
-	       Uint32 ticks = SDL_GetTicks();
+	static Uint64 basetime = 0;
+	       Uint64 ticks = SDL_GetTicks();
 #endif
 
 	if (!basetime)
@@ -2336,7 +2199,6 @@ int I_GetTimeMicros(void)
 {
 	return TimeFunction(1000000);
 }
-
 
 //
 //I_StartupTimer
@@ -2459,6 +2321,8 @@ void I_Quit(void)
 		printf("\r");
 		ShowEndTxt();
 	}
+	if (myargmalloc)
+		free(myargv); // Deallocate allocated memory
 death:
 	W_Shutdown();
 #ifdef GP2X
@@ -2496,9 +2360,7 @@ static boolean shutdowning = false;
 void I_Error(const char *error, ...)
 {
 	va_list argptr;
-#if (defined (MAC_ALERT) || defined (_WIN32) || (defined (_WIN32_WCE) && !defined (__GNUC__))) && !defined (_XBOX)
 	char buffer[8192];
-#endif
 
 	// recursive error detecting
 	if (shutdowning)
@@ -2511,79 +2373,42 @@ void I_Error(const char *error, ...)
 			I_ShutdownMusic();
 		if (errorcount == 3)
 			I_ShutdownSound();
-		if (errorcount == 5)
+		if (errorcount == 4)
 			I_ShutdownGraphics();
-		if (errorcount == 6)
+		if (errorcount == 5)
 			I_ShutdownInput();
-		if (errorcount == 7)
+		if (errorcount == 6)
 			I_ShutdownSystem();
-#ifndef _arch_dreamcast
-		if (errorcount == 8)
+		if (errorcount == 7)
 			SDL_Quit();
-#endif
-		if (errorcount == 9)
+		if (errorcount == 8)
 		{
 			M_SaveConfig(NULL);
 			G_SaveGameData();
 		}
 		if (errorcount > 20)
 		{
-#ifdef MAC_ALERT
 			va_start(argptr, error);
 			vsprintf(buffer, error, argptr);
 			va_end(argptr);
-			// 2004-03-03 AJR Since the Mac user is most likely double clicking to run the game, give them a panel.
-			MacShowAlert("Recursive Error", buffer, "Quit", NULL, NULL);
-#elif (defined (_WIN32) || (defined (_WIN32_WCE)) && !defined (__GNUC__)) && !defined (_XBOX)
-			va_start(argptr,error);
-			vsprintf(buffer, error, argptr);
-			va_end(argptr);
-#ifndef _WIN32_WCE
-			{
-				HANDLE co = GetStdHandle(STD_OUTPUT_HANDLE);
-				DWORD bytesWritten;
-				if (co != INVALID_HANDLE_VALUE)
-				{
-					if (GetFileType(co) == FILE_TYPE_CHAR && GetConsoleMode(co, &bytesWritten))
-						WriteConsoleA(co, buffer, (DWORD)strlen(buffer), NULL, NULL);
-					else
-						WriteFile(co, buffer, (DWORD)strlen(buffer), &bytesWritten, NULL);
-				}
-			}
-#endif
-			OutputDebugStringA(buffer);
-			MessageBoxA(vid.WndParent, buffer, "SRB2 Recursive Error", MB_OK|MB_ICONERROR);
-#else
-			// Don't print garbage
-			va_start(argptr, error);
-			if (!framebuffer)
-				vfprintf (stderr, error, argptr);
-			va_end(argptr);
-#endif
+			// Implement message box with SDL_ShowSimpleMessageBox,
+			// which should fail gracefully if it can't put a message box up
+			// on the target system
+			printf("Recursive error\n");
 			W_Shutdown();
-#ifdef GP2X
-			chdir("/usr/gp2x");
-			execl("/usr/gp2x/gp2xmenu", "/usr/gp2x/gp2xmenu", NULL);
-#endif
 			exit(-1); // recursive errors detected
 		}
 	}
-	shutdowning = true;
-	I_ShutdownConsole();
-#ifndef MAC_ALERT
-	// Message first.
-	va_start(argptr,error);
-	if (!framebuffer)
-	{
-		fprintf(stderr, "Error: ");
-		vfprintf(stderr,error,argptr);
-		fprintf(stderr, "\n");
-	}
-	va_end(argptr);
 
-	if (!framebuffer)
-		fflush(stderr);
-#endif
+	shutdowning = true;
+
+	// Display error message in the console before we start shutting it down
+	va_start(argptr, error);
+	vsprintf(buffer, error, argptr);
+	va_end(argptr);
+	I_OutputMsg("\nI_Error(): %s\n", buffer);
+	// ---
+
 	M_SaveConfig(NULL); // save game config, cvars..
 #ifndef NONET
 	D_SaveBan(); // save the ban list
@@ -2597,30 +2422,32 @@ void I_Error(const char *error, ...)
 		G_StopMetalRecording(false);
 
 	D_QuitNetGame();
+	CL_AbortDownloadResume();
+	M_FreePlayerSetupColors();
 	I_ShutdownMusic();
 	I_ShutdownSound();
 	// use this for 1.28 19990220 by Kin
 	I_ShutdownGraphics();
 	I_ShutdownInput();
 	I_ShutdownSystem();
-#ifndef _arch_dreamcast
 	SDL_Quit();
-#endif
-#ifdef MAC_ALERT
-	va_start(argptr, error);
-	vsprintf(buffer, error, argptr);
-	va_end(argptr);
-	// 2004-03-03 AJR Since the Mac user is most likely double clicking to run the game, give them a panel.
-	MacShowAlert("Critical Error", buffer, "Quit", NULL, NULL);
-#endif
+
+	// Implement message box with SDL_ShowSimpleMessageBox,
+	// which should fail gracefully if it can't put a message box up
+	// on the target system
+	printf("SRB2 Error\n");
+	// Note that SDL_ShowSimpleMessageBox does *not* require SDL to be
+	// initialized at the time, so calling it after SDL_Quit() is
+	// perfectly okay! In addition, we do this on purpose so the
+	// fullscreen window is closed before displaying the error message
+	// in case the fullscreen window blocks it for some absurd reason.
+
 	W_Shutdown();
+
 #if defined (PARANOIA) && defined (__CYGWIN__)
-		*(INT32 *)2 = 4; //Alam: Debug!
+	*(INT32 *)2 = 4; //Alam: Debug!
 #endif
-#ifdef GP2X
-	chdir("/usr/gp2x");
-	execl("/usr/gp2x/gp2xmenu", "/usr/gp2x/gp2xmenu", NULL);
-#endif
+
 	exit(-1);
 }
 
@@ -2669,6 +2496,48 @@ void I_RemoveExitFunc(void (*func)())
 	}
 }
 
+#if !(defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON))
+static void Shittycopyerror(const char *name)
+{
+	I_OutputMsg(
+			"Error copying log file: %s: %s\n",
+			name,
+			strerror(errno)
+	);
+}
+
+static void Shittylogcopy(void)
+{
+	char buf[8192];
+	FILE *fp;
+	size_t r;
+	if (fseek(logstream, 0, SEEK_SET) == -1)
+	{
+		Shittycopyerror("fseek");
+	}
+	else if (( fp = fopen(logfilename, "wt") ))
+	{
+		while (( r = fread(buf, 1, sizeof buf, logstream) ))
+		{
+			if (fwrite(buf, 1, r, fp) < r)
+			{
+				Shittycopyerror("fwrite");
+				break;
+			}
+		}
+		if (ferror(logstream))
+		{
+			Shittycopyerror("fread");
+		}
+		fclose(fp);
+	}
+	else
+	{
+		Shittycopyerror(logfilename);
+	}
+}
+#endif/*!(defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON))*/
+
 //
 //  Closes down everything. This includes restoring the initial
 //  palette and video mode, and removing whatever mouse, keyboard, and
@@ -2680,12 +2549,20 @@ void I_ShutdownSystem(void)
 {
 	INT32 c;
 
+#ifndef NEWSIGNALHANDLER
+	I_ShutdownConsole();
+#endif
+
 	for (c = MAX_QUIT_FUNCS-1; c >= 0; c--)
 		if (quit_funcs[c])
 			(*quit_funcs[c])();
-#ifdef  LOGMESSAGES
+#ifdef LOGMESSAGES
 	if (logstream)
 	{
+		I_OutputMsg("I_ShutdownSystem(): end of logstream.\n");
+#if !(defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON))
+		Shittylogcopy();
+#endif
 		fclose(logstream);
 		logstream = NULL;
 	}
@@ -2695,34 +2572,32 @@ void I_ShutdownSystem(void)
 
 void I_GetDiskFreeSpace(INT64 *freespace)
 {
-#if defined (_arch_dreamcast) || defined (_PSP)
-	*freespace = 0;
-#elif defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
-#if defined (SOLARIS) || defined (__HAIKU__) || defined (_WII) || defined (_PS3)
+#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
+#if defined (SOLARIS) || defined (__HAIKU__)
 	*freespace = INT32_MAX;
 	return;
 #else // Both Linux and BSD have this, apparently.
 	struct statfs stfs;
-	if (statfs(".", &stfs) == -1)
+	if (statfs(srb2home, &stfs) == -1)
 	{
 		*freespace = INT32_MAX;
 		return;
 	}
 	*freespace = stfs.f_bavail * stfs.f_bsize;
 #endif
-#elif (defined (_WIN32) && !defined (_WIN32_WCE)) && !defined (_XBOX)
+#elif defined (_WIN32)
 	static p_GetDiskFreeSpaceExA pfnGetDiskFreeSpaceEx = NULL;
 	static boolean testwin95 = false;
 	ULARGE_INTEGER usedbytes, lfreespace;
 
 	if (!testwin95)
 	{
-		pfnGetDiskFreeSpaceEx = (p_GetDiskFreeSpaceExA)GetProcAddress(GetModuleHandleA("kernel32.dll"), "GetDiskFreeSpaceExA");
+		pfnGetDiskFreeSpaceEx = (p_GetDiskFreeSpaceExA)(LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "GetDiskFreeSpaceExA");
 		testwin95 = true;
 	}
 	if (pfnGetDiskFreeSpaceEx)
 	{
-		if (pfnGetDiskFreeSpaceEx(NULL, &lfreespace, &usedbytes, NULL))
+		if (pfnGetDiskFreeSpaceEx(srb2home, &lfreespace, &usedbytes, NULL))
 			*freespace = lfreespace.QuadPart;
 		else
 			*freespace = INT32_MAX;
@@ -2731,7 +2606,7 @@ void I_GetDiskFreeSpace(INT64 *freespace)
 	{
 		DWORD SectorsPerCluster, BytesPerSector, NumberOfFreeClusters, TotalNumberOfClusters;
 		GetDiskFreeSpace(NULL, &SectorsPerCluster, &BytesPerSector,
-		                 &NumberOfFreeClusters, &TotalNumberOfClusters);
+						 &NumberOfFreeClusters, &TotalNumberOfClusters);
 		*freespace = BytesPerSector*SectorsPerCluster*NumberOfFreeClusters;
 	}
 #else // Dummy for platform independent; 1GB should be enough
@@ -2741,14 +2616,7 @@ void I_GetDiskFreeSpace(INT64 *freespace)
 
 char *I_GetUserName(void)
 {
-#ifdef GP2X
-	static char username[MAXPLAYERNAME] = "GP2XUSER";
-	return username;
-#elif defined (PSP)
-	static char username[MAXPLAYERNAME] = "PSPUSER";
-	return username;
-#elif !(defined (_WIN32_WCE) || defined (_XBOX))
-	static char username[MAXPLAYERNAME];
+	static char username[MAXPLAYERNAME+1];
 	char *p;
 #ifdef _WIN32
 	DWORD i = MAXPLAYERNAME;
@@ -2779,16 +2647,15 @@ char *I_GetUserName(void)
 
 	if (strcmp(username, "") != 0)
 		return username;
-#endif
 	return NULL; // dummy for platform independent version
 }
 
 INT32 I_mkdir(const char *dirname, INT32 unixright)
 {
 //[segabor]
-#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON) || defined (__CYGWIN__) || defined (__OS2__)
+#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON) || defined (__CYGWIN__)
 	return mkdir(dirname, unixright);
-#elif (defined (_WIN32) || (defined (_WIN32_WCE) && !defined (__GNUC__))) && !defined (_XBOX)
+#elif defined (_WIN32)
 	UNREFERENCED_PARAMETER(unixright); /// \todo should implement ntright under nt...
 	return CreateDirectoryA(dirname, NULL);
 #else
@@ -2802,9 +2669,6 @@ char *I_GetEnv(const char *name)
 {
 #ifdef NEED_SDL_GETENV
 	return SDL_getenv(name);
-#elif defined(_WIN32_WCE)
-	(void)name;
-	return NULL;
 #else
 	return getenv(name);
 #endif
@@ -2814,8 +2678,6 @@ INT32 I_PutEnv(char *variable)
 {
 #ifdef NEED_SDL_GETENV
 	return SDL_putenv(variable);
-#elif defined(_WIN32_WCE)
-	return ((variable)?-1:0);
 #else
 	return putenv(variable);
 #endif
@@ -2856,14 +2718,6 @@ static boolean isWadPathOk(const char *path)
 		return true;
 	}
 
-	sprintf(wad3path, pandf, path, WADKEYWORD2);
-
-	if (FIL_ReadFileOK(wad3path))
-	{
-		free(wad3path);
-		return true;
-	}
-
 	free(wad3path);
 	return false;
 }
@@ -2881,7 +2735,7 @@ static void pathonly(char *s)
 		}
 }
 
-/**	\brief	search for srb2.srb in the given path
+/**	\brief	search for srb2.pk3 in the given path
 
 	\param	searchDir	starting path
 
@@ -2902,19 +2756,12 @@ static const char *searchWad(const char *searchDir)
 		return tempsw;
 	}
 
-	strcpy(tempsw, WADKEYWORD2);
-	fstemp = filesearch(tempsw, searchDir, NULL, true, 20);
-	if (fstemp == FS_FOUND)
-	{
-		pathonly(tempsw);
-		return tempsw;
-	}
 	return NULL;
 }
 
-/**	\brief go through all possible paths and look for srb2.srb
+/**	\brief go through all possible paths and look for srb2.pk3
 
-  \return path to srb2.srb if any
+  \return path to srb2.pk3 if any
 */
 static const char *locateWad(void)
 {
@@ -2926,21 +2773,33 @@ static const char *locateWad(void)
 	if (((envstr = I_GetEnv("SRB2WADDIR")) != NULL) && isWadPathOk(envstr))
 		return envstr;
 
-#if defined(_WIN32_WCE) || defined(_PS3) || defined(_PSP)
-	// examine argv[0]
-	strcpy(returnWadPath, myargv[0]);
-	pathonly(returnWadPath);
-	I_PutEnv(va("HOME=%s",returnWadPath));
-	if (isWadPathOk(returnWadPath))
-		return returnWadPath;
-#endif
-
 #ifndef NOCWD
 	I_OutputMsg(",.");
 	// examine current dir
 	strcpy(returnWadPath, ".");
 	if (isWadPathOk(returnWadPath))
 		return NULL;
+#endif
+
+
+#ifdef CMAKECONFIG
+#ifndef NDEBUG
+	I_OutputMsg(","CMAKE_ASSETS_DIR);
+	strcpy(returnWadPath, CMAKE_ASSETS_DIR);
+	if (isWadPathOk(returnWadPath))
+	{
+		return returnWadPath;
+	}
+#endif
+#endif
+
+#ifdef __APPLE__
+	OSX_GetResourcesPath(returnWadPath);
+	I_OutputMsg(",%s", returnWadPath);
+	if (isWadPathOk(returnWadPath))
+	{
+		return returnWadPath;
+	}
 #endif
 
 	// examine default dirs
@@ -3031,10 +2890,10 @@ const char *I_LocateWad(void)
 
 	if (waddir)
 	{
-		// change to the directory where we found srb2.srb
-#if (defined (_WIN32) && !defined (_WIN32_WCE)) && !defined (_XBOX)
+		// change to the directory where we found srb2.pk3
+#if defined (_WIN32)
 		SetCurrentDirectoryA(waddir);
-#elif !defined (_WIN32_WCE) && !defined (_PS3)
+#else
 		if (chdir(waddir) == -1)
 			I_OutputMsg("Couldn't change working directory\n");
 #endif
@@ -3042,26 +2901,39 @@ const char *I_LocateWad(void)
 	return waddir;
 }
 
-#ifdef LINUX
+#ifdef __linux__
 #define MEMINFO_FILE "/proc/meminfo"
 #define MEMTOTAL "MemTotal:"
+#define MEMAVAILABLE "MemAvailable:"
 #define MEMFREE "MemFree:"
+#define CACHED "Cached:"
+#define BUFFERS "Buffers:"
+#define SHMEM "Shmem:"
+
+/* Parse the contents of /proc/meminfo (in buf), return value of "name"
+ * (example: MemTotal) */
+static long get_entry(const char* name, const char* buf)
+{
+	long val;
+	char* hit = strstr(buf, name);
+	if (hit == NULL) {
+		return -1;
+	}
+
+	errno = 0;
+	val = strtol(hit + strlen(name), NULL, 10);
+	if (errno != 0) {
+		CONS_Alert(CONS_ERROR, M_GetText("get_entry: strtol() failed: %s\n"), strerror(errno));
+		return -1;
+	}
+	return val;
+}
 #endif
 
 // quick fix for compil
 UINT32 I_GetFreeMem(UINT32 *total)
 {
-#if defined (_arch_dreamcast)
-	//Dreamcast!
-	if (total)
-		*total = 16<<20;
-	return 8<<20;
-#elif defined (_PSP)
-	// PSP
-	if (total)
-		*total = 32<<20;
-	return 16<<20;
-#elif defined (FREEBSD)
+#ifdef FREEBSD
 	struct vmmeter sum;
 	kvm_t *kd;
 	struct nlist namelist[] =
@@ -3072,20 +2944,23 @@ UINT32 I_GetFreeMem(UINT32 *total)
 	};
 	if ((kd = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open")) == NULL)
 	{
-		*total = 0L;
+		if (total)
+			*total = 0L;
 		return 0;
 	}
 	if (kvm_nlist(kd, namelist) != 0)
 	{
 		kvm_close (kd);
-		*total = 0L;
+		if (total)
+			*total = 0L;
 		return 0;
 	}
 	if (kvm_read(kd, namelist[X_SUM].n_value, &sum,
 		sizeof (sum)) != sizeof (sum))
 	{
 		kvm_close(kd);
-		*total = 0L;
+		if (total)
+			*total = 0L;
 		return 0;
 	}
 	kvm_close(kd);
@@ -3098,7 +2973,15 @@ UINT32 I_GetFreeMem(UINT32 *total)
 	if (total)
 		*total = 32 << 20;
 	return 32 << 20;
-#elif defined (LINUX)
+#elif defined (_WIN32)
+	MEMORYSTATUS info;
+
+	info.dwLength = sizeof (MEMORYSTATUS);
+	GlobalMemoryStatus( &info );
+	if (total)
+		*total = (UINT32)info.dwTotalPhys;
+	return (UINT32)info.dwAvailPhys;
+#elif defined (__linux__)
 	/* Linux */
 	char buf[1024];
 	char *memTag;
@@ -3106,6 +2989,11 @@ UINT32 I_GetFreeMem(UINT32 *total)
 	UINT32 totalKBytes;
 	INT32 n;
 	INT32 meminfo_fd = -1;
+	long Cached;
+	long MemFree;
+	long Buffers;
+	long Shmem;
+	long MemAvailable = -1;
 
 	meminfo_fd = open(MEMINFO_FILE, O_RDONLY);
 	n = read(meminfo_fd, buf, 1023);
@@ -3114,66 +3002,63 @@ UINT32 I_GetFreeMem(UINT32 *total)
 	if (n < 0)
 	{
 		// Error
-		*total = 0L;
+		if (total)
+			*total = 0L;
 		return 0;
 	}
 
 	buf[n] = '\0';
-	if (NULL == (memTag = strstr(buf, MEMTOTAL)))
+	if ((memTag = strstr(buf, MEMTOTAL)) == NULL)
 	{
 		// Error
-		*total = 0L;
+		if (total)
+			*total = 0L;
 		return 0;
 	}
 
 	memTag += sizeof (MEMTOTAL);
 	totalKBytes = atoi(memTag);
 
-	if (NULL == (memTag = strstr(buf, MEMFREE)))
+	if ((memTag = strstr(buf, MEMAVAILABLE)) == NULL)
 	{
-		// Error
-		*total = 0L;
-		return 0;
-	}
+		Cached = get_entry(CACHED, buf);
+		MemFree = get_entry(MEMFREE, buf);
+		Buffers = get_entry(BUFFERS, buf);
+		Shmem = get_entry(SHMEM, buf);
+		MemAvailable = Cached + MemFree + Buffers - Shmem;
 
-	memTag += sizeof (MEMFREE);
-	freeKBytes = atoi(memTag);
+		if (MemAvailable == -1)
+		{
+			// Error
+			if (total)
+				*total = 0L;
+			return 0;
+		}
+		freeKBytes = MemAvailable;
+	}
+	else
+	{
+		memTag += sizeof (MEMAVAILABLE);
+		freeKBytes = atoi(memTag);
+	}
 
 	if (total)
 		*total = totalKBytes << 10;
 	return freeKBytes << 10;
-#elif (defined (_WIN32) || (defined (_WIN32_WCE) && !defined (__GNUC__))) && !defined (_XBOX)
-	MEMORYSTATUS info;
-
-	info.dwLength = sizeof (MEMORYSTATUS);
-	GlobalMemoryStatus( &info );
-	if (total)
-		*total = (UINT32)info.dwTotalPhys;
-	return (UINT32)info.dwAvailPhys;
-#elif defined (__OS2__)
-	UINT32 pr_arena;
-
-	if (total)
-		DosQuerySysInfo( QSV_TOTPHYSMEM, QSV_TOTPHYSMEM,
-							(PVOID) total, sizeof (UINT32));
-	DosQuerySysInfo( QSV_MAXPRMEM, QSV_MAXPRMEM,
-				(PVOID) &pr_arena, sizeof (UINT32));
-
-	return pr_arena;
 #else
 	// Guess 48 MB.
 	if (total)
 		*total = 48<<20;
 	return 48<<20;
-#endif /* LINUX */
+#endif
 }
 
 const CPUInfoFlags *I_CPUInfo(void)
 {
-#if (defined (_WIN32) && !defined (_WIN32_WCE)) && !defined (_XBOX)
+#if defined (_WIN32)
 	static CPUInfoFlags WIN_CPUInfo;
 	SYSTEM_INFO SI;
-	p_IsProcessorFeaturePresent pfnCPUID = (p_IsProcessorFeaturePresent)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsProcessorFeaturePresent");
+	p_IsProcessorFeaturePresent pfnCPUID = (p_IsProcessorFeaturePresent)(LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsProcessorFeaturePresent");
 
 	ZeroMemory(&WIN_CPUInfo,sizeof (WIN_CPUInfo));
 	if (pfnCPUID)
@@ -3206,8 +3091,8 @@ const CPUInfoFlags *I_CPUInfo(void)
 		WIN_CPUInfo.SSE2        = SDL_HasSSE2();
 		WIN_CPUInfo.AltiVec     = SDL_HasAltiVec();
 	}
-	WIN_CPUInfo.MMXExt      = SDL_HasMMXExt();
-	WIN_CPUInfo.AMD3DNowExt = SDL_Has3DNowExt();
+	WIN_CPUInfo.MMXExt      = SDL_FALSE; //SDL_HasMMXExt(); No longer in SDL2
+	WIN_CPUInfo.AMD3DNowExt = SDL_FALSE; //SDL_Has3DNowExt(); No longer in SDL2
 #endif
 	GetSystemInfo(&SI);
 	WIN_CPUInfo.CPUs = SI.dwNumberOfProcessors;
@@ -3219,9 +3104,9 @@ const CPUInfoFlags *I_CPUInfo(void)
 	memset(&SDL_CPUInfo,0,sizeof (CPUInfoFlags));
 	SDL_CPUInfo.RDTSC       = SDL_HasRDTSC();
 	SDL_CPUInfo.MMX         = SDL_HasMMX();
-	SDL_CPUInfo.MMXExt      = SDL_HasMMXExt();
+	SDL_CPUInfo.MMXExt      = SDL_FALSE; //SDL_HasMMXExt(); No longer in SDL2
 	SDL_CPUInfo.AMD3DNow    = SDL_Has3DNow();
-	SDL_CPUInfo.AMD3DNowExt = SDL_Has3DNowExt();
+	SDL_CPUInfo.AMD3DNowExt = SDL_FALSE; //SDL_Has3DNowExt(); No longer in SDL2
 	SDL_CPUInfo.SSE         = SDL_HasSSE();
 	SDL_CPUInfo.SSE2        = SDL_HasSSE2();
 	SDL_CPUInfo.AltiVec     = SDL_HasAltiVec();
