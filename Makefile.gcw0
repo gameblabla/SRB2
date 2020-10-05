@@ -4,14 +4,14 @@ PRGNAME     = srb2.elf
 CC          = /opt/gcw0-toolchain/usr/bin/mipsel-linux-gcc
 PORT		= sdl12
 HUGE_PAGES	= 1
-PROFILE		= YES
+PROFILE		= APPLY
 
 # change compilation / linking flag options
-CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell sdl-config --cflags)
+CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell /opt/gcw0-toolchain/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --cflags)
 CFLAGS		+= -fno-exceptions -Isrc -Isrc/$(PORT)
-CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_OPENMPT -DHAVE_ZLIB -DNDEBUG
-
-CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2
+CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG
+CFLAGS		+= -DGCW0 -DNOPOSTPROCESSING -DLOWMEMORY
+CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2 -mplt
 
 ifeq ($(PROFILE), YES)
 CFLAGS		+= -fprofile-generate=/usr/local/home
@@ -20,12 +20,12 @@ else ifeq ($(PROFILE), APPLY)
 CFLAGS		+= -fprofile-use
 endif
 
-LDFLAGS_SDL = $(shell sdl-config --libs) -lSDL_mixer
+LDFLAGS_SDL = $(shell /opt/gcw0-toolchain/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --libs) -lSDL_mixer
 
 ifeq ($(HUGE_PAGES), 0)
 LDFLAGS		+= -nodefaultlibs
 endif
-LDFLAGS     +=  -lc -lgcc $(LDFLAGS_SDL) -lpng -lrt -lgme -lcurl -lm -lopenmpt -lz -Wl,--as-needed -Wl,--gc-sections -flto -s
+LDFLAGS     +=  -lc -lgcc $(LDFLAGS_SDL) -lpng -lrt -lcurl -lm -lz -Wl,--as-needed -Wl,--gc-sections -flto -s
 ifeq ($(HUGE_PAGES), 1)
 LDFLAGS		+= -Wl,-zcommon-page-size=2097152 -Wl,-zmax-page-size=2097152 -lhugetlbfs
 endif

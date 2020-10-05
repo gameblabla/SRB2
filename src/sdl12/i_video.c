@@ -124,7 +124,7 @@
 #endif
 
 // maximum number of windowed modes (see windowedModes[][])
-#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X)
+#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(GCW0)
 #define MAXWINMODES (1)
 #elif defined (WII)
 #define MAXWINMODES (8)
@@ -205,6 +205,11 @@ static       SDL_bool    exposevideo = SDL_FALSE;
 // windowed video modes from which to choose from.
 static INT32 windowedModes[MAXWINMODES][2] =
 {
+#if defined(GCW0)
+	{ 320, 240}, // 1.33,1.00
+#elif defined(RS90)
+	{ 240, 160}, // 1.33,1.00
+#else
 #if !(defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined (GP2X))
 #ifndef WII
 #ifndef _PS3
@@ -238,6 +243,7 @@ static INT32 windowedModes[MAXWINMODES][2] =
 	{ 320, 240}, // 1.33,1.00
 #endif
 	{ 320, 200}, // 1.60,1.00
+#endif
 };
 
 static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
@@ -267,6 +273,26 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 #ifdef FILTERS
 	bpp = Setupf2x(width, height, bpp);
 #endif
+
+#ifdef GCW0
+	if (vidSurface)
+		return;
+	bpp = 16;
+	width = 320;
+	height = 240;
+	vidSurface = SDL_SetVideoMode(width, height, bpp, flags | SDL_HWSURFACE);
+	if (!vidSurface)
+		return;
+#elif RS90
+	if (vidSurface)
+		return;
+	bpp = 16;
+	width = 240;
+	height = 160;
+	vidSurface = SDL_SetVideoMode(width, height, bpp, flags | SDL_HWSURFACE);
+	if (!vidSurface)
+		return;
+#else
 	if (SDLVD && strncasecmp(SDLVD,"glSDL",6) == 0) //for glSDL videodriver
 		vidSurface = SDL_SetVideoMode(width, height,0,SDL_DOUBLEBUF);
 #ifdef _WII // don't want it to use HWSURFACE, so make it first here
@@ -280,14 +306,16 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	else if (SDL_VideoModeOK(width, height, bpp, flags|SDL_SWSURFACE) >= bpp)
 		vidSurface = SDL_SetVideoMode(width, height, bpp, flags|SDL_SWSURFACE);
 	else return;
+#endif
 	realwidth = (Uint16)width;
 	realheight = (Uint16)height;
+
 #ifdef HAVE_DCSDL
 	//SDL_DC_SetWindow(320,200);
 	SDL_DC_EmulateMouse(SDL_FALSE);
 	SDL_DC_EmulateKeyboard(SDL_TRUE);
 #endif
-#ifdef HAVE_GP2XSDL
+#if defined(HAVE_GP2XSDL) || defined(GCW0) 
 	SDL_ShowCursor(SDL_DISABLE); //For GP2X Open2x
 #endif
 #ifdef FILTERS
@@ -2014,6 +2042,9 @@ void I_StartupGraphics(void)
 #elif defined(_PS3)
 		vid.width = 720;
 		vid.height = 480;
+#elif defined(GCW0)
+		vid.width = 320;
+		vid.height = 240;
 #else
 		vid.width = BASEVIDWIDTH;
 		vid.height = BASEVIDHEIGHT;

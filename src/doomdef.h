@@ -595,7 +595,9 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 //#define SAVEGAME_OTHERVERSIONS
 
 ///	Shuffle's incomplete OpenGL sorting code.
+#if !defined (_NDS) && !defined (_PSP) && !defined (GCW0)
 #define SHUFFLE // This has nothing to do with sorting, why was it disabled?
+#endif
 
 ///	Allow the use of the SOC RESETINFO command.
 ///	\note	Builds that are tight on memory should disable this.
@@ -622,7 +624,9 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 #define NEWCLIP
 
 /// OpenGL shaders
+#ifndef GCW0
 #define GL_SHADERS
+#endif
 
 /// Handle touching sector specials in P_PlayerAfterThink instead of P_PlayerThink.
 /// \note   Required for proper collision with moving sloped surfaces that have sector specials on them.

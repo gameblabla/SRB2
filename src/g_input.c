@@ -769,6 +769,24 @@ void G_DefineDefaultControls(void)
 		//gamecontrolbisdefault[i][gc_talkkey   ][0] = KEY_2HAT1+2; // D-Pad Left
 		//gamecontrolbisdefault[i][gc_scores    ][0] = KEY_2HAT1+3; // D-Pad Right
 	}
+	
+	#ifdef GCW0
+	// FPS game controls (WASD)
+	gamecontroldefault[gcs_fps][gc_forward    ][0] = KEY_UPARROW;
+	gamecontroldefault[gcs_fps][gc_backward   ][0] = KEY_DOWNARROW;
+	gamecontroldefault[gcs_fps][gc_strafeleft ][0] = 'a';
+	gamecontroldefault[gcs_fps][gc_straferight][0] = 'b';
+	gamecontroldefault[gcs_fps][gc_lookup     ][0] = 'c';
+	gamecontroldefault[gcs_fps][gc_lookdown   ][0] = 'd';
+	gamecontroldefault[gcs_fps][gc_turnleft   ][0] = KEY_LEFTARROW;
+	gamecontroldefault[gcs_fps][gc_turnright  ][0] = KEY_RIGHTARROW;
+	gamecontroldefault[gcs_fps][gc_centerview ][0] = KEY_END;
+	gamecontroldefault[gcs_fps][gc_jump       ][0] = KEY_LCTRL;
+	gamecontroldefault[gcs_fps][gc_spin       ][0] = KEY_LALT;
+	gamecontroldefault[gcs_fps][gc_fire       ][0] = KEY_LSHIFT;
+	gamecontroldefault[gcs_fps][gc_centerview ][0] = KEY_TAB;
+	gamecontroldefault[gcs_fps][gc_centerview ][1] = KEY_MINUSPAD;
+	#endif
 }
 
 INT32 G_GetControlScheme(INT32 (*fromcontrols)[2], const INT32 *gclist, INT32 gclen)

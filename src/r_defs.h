@@ -603,9 +603,12 @@ typedef post_t column_t;
 //
 
 #ifndef MAXFFLOORS
+#ifdef GCW0
+#define MAXFFLOORS 5
+#else
 #define MAXFFLOORS 40
 #endif
-
+#endif
 //
 // ?
 //
