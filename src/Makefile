@@ -95,6 +95,14 @@ ALL_SYSTEMS=\
 	MACOSX\
 	SDL\
 
+
+NOTHREADS=1
+NOHW=1
+NOASM=1
+NONX86=1
+NOIPX=1
+SDL=1
+
 # check for user specified system
 ifeq (,$(filter $(ALL_SYSTEMS),$(.VARIABLES)))
 ifeq ($(OS),Windows_NT) # all windows are Windows_NT...
@@ -208,6 +216,8 @@ endif
 
 ifdef LINUX
 UNIXCOMMON=1
+NONET=1
+NOHW=1
 ifndef NOGME
 HAVE_LIBGME=1
 endif
@@ -386,6 +396,8 @@ CFLAGS+=-DHAVE_MINIUPNPC
 endif
 endif
 
+LIBS += -lm -lrt
+
 include blua/Makefile.cfg
 
 ifdef NOMD5
@@ -530,7 +542,6 @@ OBJS:=$(i_main_o) \
 		$(OBJDIR)/http-mserv.o\
 		$(OBJDIR)/i_tcp.o    \
 		$(OBJDIR)/lzf.o	     \
-		$(OBJDIR)/vid_copy.o \
 		$(OBJDIR)/b_bot.o \
 		$(i_net_o)      \
 		$(i_system_o)   \

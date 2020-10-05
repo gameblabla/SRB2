@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SRB2 v2.2
+Comment=Platforming game
+Exec=srb2.elf
+Icon=icon
+Terminal=false
+Categories=games;
+X-OD-NeedsDownscaling=false

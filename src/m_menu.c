@@ -71,7 +71,9 @@
 #if defined(HAVE_SDL)
 #include "SDL.h"
 #if SDL_VERSION_ATLEAST(2,0,0)
-#include "sdl/sdlmain.h" // JOYSTICK_HOTPLUG
+#include "sdl2/sdlmain.h" // JOYSTICK_HOTPLUG
+#else
+#include "sdl12/sdlmain.h" // JOYSTICK_HOTPLUG
 #endif
 #endif
 
@@ -1332,6 +1334,8 @@ enum
 static menuitem_t OP_VideoOptionsMenu[] =
 {
 	{IT_HEADER, NULL, "Screen", NULL, 0},
+	
+#ifndef GCW0_INPUT
 	{IT_STRING | IT_CALL,  NULL, "Set Resolution...",       M_VideoModeMenu,          6},
 
 #if (defined (__unix__) && !defined (MSDOS)) || defined (UNIXCOMMON) || defined (HAVE_SDL)
@@ -1342,6 +1346,8 @@ static menuitem_t OP_VideoOptionsMenu[] =
 	{IT_STRING | IT_CVAR, NULL, "Renderer",                     &cv_renderer,        21},
 #else
 	{IT_TRANSTEXT | IT_PAIR, "Renderer", "Software",            &cv_renderer,           21},
+#endif
+
 #endif
 
 	{IT_HEADER, NULL, "Color Profile", NULL, 30},
@@ -3498,6 +3504,9 @@ boolean M_Responder(event_t *ev)
 			return true;
 
 		case KEY_ENTER:
+		#ifdef GCW0_INPUT
+		case KEY_LCTRL:
+		#endif
 			noFurtherInput = true;
 			currentMenu->lastOn = itemOn;
 			if (routine)
@@ -3534,6 +3543,9 @@ boolean M_Responder(event_t *ev)
 			return true;
 
 		case KEY_ESCAPE:
+		#ifdef GCW0_INPUT
+		case KEY_LALT:
+		#endif
 			noFurtherInput = true;
 			currentMenu->lastOn = itemOn;
 

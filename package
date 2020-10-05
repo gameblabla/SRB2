@@ -1,0 +1,2 @@
+#!/bin/sh
+mksquashfs ./opk srb2_"$1".opk -all-root -noappend -no-exports -no-xattrs

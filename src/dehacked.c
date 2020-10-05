@@ -38,6 +38,7 @@
 #include "lua_script.h"
 #include "lua_hook.h"
 #include "d_clisrv.h"
+#include "s_sound.h"
 
 #include "m_cond.h"
 
@@ -4330,7 +4331,7 @@ static void readmaincfg(MYFILE *f)
 
 				// Also save a time attack folder
 				filenamelen = strlen(gamedatafilename)-4;  // Strip off the extension
-				strncpy(timeattackfolder, gamedatafilename, min(filenamelen, sizeof (timeattackfolder)));
+				strcpy(timeattackfolder, gamedatafilename);
 				timeattackfolder[min(filenamelen, sizeof (timeattackfolder) - 1)] = '\0';
 
 				strcpy(savegamename, timeattackfolder);

@@ -1,0 +1,52 @@
+PRGNAME     = opk_rs90/srb2.elf
+
+# define regarding OS, which compiler to use
+CC          = /opt/rs90-toolchain/usr/bin/mipsel-linux-gcc
+PORT		= sdl12
+HUGE_PAGES	= 0
+PROFILE		= 0
+
+# change compilation / linking flag options
+CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell /opt/gcw0-toolchain/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --cflags)
+CFLAGS		+= -fno-exceptions -Isrc -Isrc/$(PORT)
+CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG
+CFLAGS		+= -DRS90 -DGCW0_OPTS -DNOPOSTPROCESSING -DLOWMEMORY
+CFLAGS		+= -Os -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32 -mtune=mips32 -mplt
+
+ifeq ($(PROFILE), YES)
+CFLAGS		+= -fprofile-generate=/usr/local/home
+LDFLAGS		= -lgcov
+else ifeq ($(PROFILE), APPLY)
+CFLAGS		+= -fprofile-use
+endif
+
+LDFLAGS_SDL = $(shell /opt/rs90-toolchain/mipsel-rs90-linux-musl/sysroot/usr/bin/sdl-config --libs) -lSDL_mixer
+
+ifeq ($(HUGE_PAGES), 0)
+LDFLAGS		+= -nodefaultlibs
+endif
+LDFLAGS     +=  -lc -lgcc $(LDFLAGS_SDL) -lpng -lrt -lm -lz -Wl,--as-needed -Wl,--gc-sections -flto -s
+ifeq ($(HUGE_PAGES), 1)
+LDFLAGS		+= -Wl,-zcommon-page-size=2097152 -Wl,-zmax-page-size=2097152 -lhugetlbfs
+endif
+
+# Files to be compiled
+SRCDIR    = ./src ./src/$(PORT) ./src/blua
+VPATH     = $(SRCDIR)
+SRC_C   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
+OBJ_C   = $(notdir $(patsubst %.c, %.o, $(SRC_C)))
+OBJS     = $(OBJ_C)
+
+# Rules to make executable
+$(PRGNAME): $(OBJS)  
+	$(CC) $^ -o $(PRGNAME) $(LDFLAGS)
+ifeq ($(HUGE_PAGES), 1)
+	hugeedit --text --data $(PRGNAME)
+endif
+
+$(OBJ_C) : %.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+
+clean:
+	rm -f *.o
