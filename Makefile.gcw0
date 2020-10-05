@@ -11,8 +11,7 @@ CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell sdl-config --cflags)
 CFLAGS		+= -fno-exceptions -Isrc -Isrc/$(PORT)
 CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_OPENMPT -DHAVE_ZLIB -DNDEBUG
 
-CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -fsingle-precision-constant -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2
-CFLAGS		+= -falign-functions=1 -falign-jumps=1 -falign-loops=1 -falign-labels=1
+CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2
 
 ifeq ($(PROFILE), YES)
 CFLAGS		+= -fprofile-generate=/usr/local/home
