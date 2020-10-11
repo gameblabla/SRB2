@@ -39,7 +39,10 @@
 // we try to re-allocate a minimum of buffers for stability of the memory,
 // so all the small-enough tables based on screen size, are allocated once
 // and for all at the maximum size.
-#if defined (GP2X) || defined(GCW0)
+#if defined(RS90)
+#define MAXVIDWIDTH 320 //720
+#define MAXVIDHEIGHT 200 //576
+#elif defined (GP2X) || defined(GCW0)
 #define MAXVIDWIDTH 320 //720
 #define MAXVIDHEIGHT 240 //576
 #else

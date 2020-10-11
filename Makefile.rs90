@@ -1,17 +1,17 @@
 PRGNAME     = opk/srb2.elf
 
 # define regarding OS, which compiler to use
-CC          = /opt/gcw0-toolchain/usr/bin/mipsel-linux-gcc
+CC          = /opt/rs90-toolchain/usr/bin/mipsel-linux-gcc
 PORT		= sdl12
-HUGE_PAGES	= 1
-PROFILE		= APPLY
+HUGE_PAGES	= 0
+PROFILE		= 0
 
 # change compilation / linking flag options
 CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell /opt/gcw0-toolchain/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --cflags)
 CFLAGS		+= -fno-exceptions -Isrc -Isrc/$(PORT)
-CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG 
-CFLAGS		+= -DGCW0 -DGCW0_OPTS -DNOPOSTPROCESSING
-CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2 -mplt -mno-shared -mno-fp-exceptions -mno-check-zero-division -fno-common
+CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG
+CFLAGS		+= -DRS90 -DGCW0_OPTS -DNOPOSTPROCESSING -DLOWMEMORY
+CFLAGS		+= -Os -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32 -mtune=mips32 -mplt
 
 ifeq ($(PROFILE), YES)
 CFLAGS		+= -fprofile-generate=/usr/local/home
@@ -20,7 +20,7 @@ else ifeq ($(PROFILE), APPLY)
 CFLAGS		+= -fprofile-use
 endif
 
-LDFLAGS_SDL = $(shell /opt/gcw0-toolchain/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --libs) -lSDL_mixer
+LDFLAGS_SDL = $(shell /opt/rs90-toolchain/mipsel-rs90-linux-musl/sysroot/usr/bin/sdl-config --libs) -lSDL_mixer
 
 ifeq ($(HUGE_PAGES), 0)
 LDFLAGS		+= -nodefaultlibs

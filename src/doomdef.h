@@ -595,7 +595,7 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 //#define SAVEGAME_OTHERVERSIONS
 
 ///	Shuffle's incomplete OpenGL sorting code.
-#if !defined (_NDS) && !defined (_PSP) && !defined (GCW0)
+#if !defined (_NDS) && !defined (_PSP) && !defined (GCW0_OPTS)
 #define SHUFFLE // This has nothing to do with sorting, why was it disabled?
 #endif
 
@@ -604,7 +604,9 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 ///	    	This stops the game from storing backups of the states, sprites, and mobjinfo tables.
 ///	    	Though this info is compressed under normal circumstances, it's still a lot of extra
 ///	    	memory that never gets touched.
+#if !defined (_NDS) && !defined (_PSP) && !defined (LOWMEMORY)
 #define ALLOW_RESETDATA
+#endif
 
 /// Experimental tweaks to analog mode. (Needs a lot of work before it's ready for primetime.)
 //#define REDSANALOG
@@ -624,7 +626,7 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 #define NEWCLIP
 
 /// OpenGL shaders
-#ifndef GCW0
+#ifndef GCW0_OPTS
 #define GL_SHADERS
 #endif
 

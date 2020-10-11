@@ -123,8 +123,17 @@
 #include "filter/filters.h"
 #endif
 
+#ifndef SDL_TRIPLEBUF
+#define SDL_TRIPLEBUF SDL_DOUBLEBUF
+#endif
+
+#ifdef RS90
+uint8_t drm_palette[3][256];
+SDL_Surface* real_screen;
+#endif
+
 // maximum number of windowed modes (see windowedModes[][])
-#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(GCW0)
+#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(GCW0) || defined(RS90)
 #define MAXWINMODES (1)
 #elif defined (WII)
 #define MAXWINMODES (8)
@@ -205,10 +214,10 @@ static       SDL_bool    exposevideo = SDL_FALSE;
 // windowed video modes from which to choose from.
 static INT32 windowedModes[MAXWINMODES][2] =
 {
-#if defined(GCW0)
+#if defined(RS90)
+	{ 320, 200}, // 1.33,1.00
+#elif defined(GCW0)
 	{ 320, 240}, // 1.33,1.00
-#elif defined(RS90)
-	{ 240, 160}, // 1.33,1.00
 #else
 #if !(defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined (GP2X))
 #ifndef WII
@@ -246,6 +255,25 @@ static INT32 windowedModes[MAXWINMODES][2] =
 #endif
 };
 
+#ifdef RS90
+#define UINT16_16(val) ((uint32_t)(val * (float)(1<<16)))
+static const uint32_t YUV_MAT[3][3] = {
+	{UINT16_16(0.2999f),   UINT16_16(0.587f),    UINT16_16(0.114f)},
+	{UINT16_16(0.168736f), UINT16_16(0.331264f), UINT16_16(0.5f)},
+	{UINT16_16(0.5f),      UINT16_16(0.418688f), UINT16_16(0.081312f)}
+};
+static void Update_Hardware_Palette(void)
+{
+	int i;
+	for (i = 0; i < 256; i++)
+	{
+		drm_palette[0][i] = ( ( UINT16_16(  0) + YUV_MAT[0][0] * localPalette[i].r + YUV_MAT[0][1] * localPalette[i].g + YUV_MAT[0][2] * localPalette[i].b) >> 16 );
+		drm_palette[1][i] = ( ( UINT16_16(128) - YUV_MAT[1][0] * localPalette[i].r - YUV_MAT[1][1] * localPalette[i].g + YUV_MAT[1][2] * localPalette[i].b) >> 16 );
+		drm_palette[2][i] = ( ( UINT16_16(128) + YUV_MAT[2][0] * localPalette[i].r - YUV_MAT[2][1] * localPalette[i].g - YUV_MAT[2][2] * localPalette[i].b) >> 16 );
+	}
+}
+#endif
+
 static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 {
 	const char *SDLVD = I_GetEnv("SDL_VIDEODRIVER");
@@ -274,22 +302,26 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	bpp = Setupf2x(width, height, bpp);
 #endif
 
-#ifdef GCW0
+/* The new OD firmwares support 8-bits paletted support */
+#ifdef RS90
+	if (real_screen)
+		return;
+	bpp = 8;
+	width = 320;
+	height = 200;
+	
+	real_screen = SDL_SetVideoMode(width, height, 24, SDL_HWSURFACE|SDL_YUV444);
+	if (!vidSurface) vidSurface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, bpp, 0, 0, 0, 0);
+	
+	if (!real_screen)
+		return;
+#elif GCW0
 	if (vidSurface)
 		return;
-	bpp = 16;
+	bpp = 8;
 	width = 320;
 	height = 240;
-	vidSurface = SDL_SetVideoMode(width, height, bpp, flags | SDL_HWSURFACE);
-	if (!vidSurface)
-		return;
-#elif RS90
-	if (vidSurface)
-		return;
-	bpp = 16;
-	width = 240;
-	height = 160;
-	vidSurface = SDL_SetVideoMode(width, height, bpp, flags | SDL_HWSURFACE);
+	vidSurface = SDL_SetVideoMode(width, height, bpp, SDL_HWSURFACE | SDL_HWPALETTE);
 	if (!vidSurface)
 		return;
 #else
@@ -315,7 +347,7 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	SDL_DC_EmulateMouse(SDL_FALSE);
 	SDL_DC_EmulateKeyboard(SDL_TRUE);
 #endif
-#if defined(HAVE_GP2XSDL) || defined(GCW0) 
+#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) 
 	SDL_ShowCursor(SDL_DISABLE); //For GP2X Open2x
 #endif
 #ifdef FILTERS
@@ -718,7 +750,11 @@ static void VID_Command_Info_f (void)
 	SurfaceInfo(preSurface, M_GetText("Prebuffer Mode"));
 	SurfaceInfo(f2xSurface, M_GetText("Postbuffer Mode"));
 #endif
+#ifdef RS90
+	SurfaceInfo(real_screen, M_GetText("Current Video Mode"));
+#else
 	SurfaceInfo(vidSurface, M_GetText("Current Video Mode"));
+#endif
 }
 
 static void VID_Command_ModeList_f(void)
@@ -1236,7 +1272,9 @@ void I_GetEvent(void)
 					if (blitfilter) CV_SetValue(&cv_filter,1);
 #endif
 					SDLSetMode(realwidth, realheight, vid.bpp*8, surfaceFlagsW);
+#ifndef RS90
 					if (vidSurface) SDL_SetColors(vidSurface, localPalette, 0, 256);
+#endif
 #ifdef FILTERS
 					CV_SetValue(&cv_filter,filtervalue);
 #endif
@@ -1296,11 +1334,56 @@ void I_OsPolling(void)
 	I_GetEvent();
 }
 
+#ifdef RS90
+void Update_RS90_blit(void)
+{
+	uint16_t height = 200;
+	uint16_t width = 320;
+	uint16_t i;
+	uint_fast8_t j, a, plane;
+	uint8_t* dst_yuv[3];
+	uint32_t srcwidth = vidSurface->w;
+	uint8_t *srcbase = vidSurface->pixels;
+	dst_yuv[0] = real_screen->pixels;
+	dst_yuv[1] = dst_yuv[0] + height * real_screen->pitch;
+	dst_yuv[2] = dst_yuv[1] + height * real_screen->pitch;
+    for (plane=0; plane<3; plane++) /* The three Y, U and V planes */
+    {
+        uint32_t y;
+        register uint8_t *pal = drm_palette[plane];
+        for (y=0; y < height; y++)   /* The number of lines to copy */
+        {
+            register uint8_t *src = srcbase + (y*srcwidth);
+            register uint8_t *end = src + width;
+            register uint32_t *dst = (uint32_t *)&dst_yuv[plane][width * y];
+
+             __builtin_prefetch(pal, 0, 1 );
+             __builtin_prefetch(src, 0, 1 );
+             __builtin_prefetch(dst, 1, 0 );
+
+            while (src < end)       /* The actual line data to copy */
+            {
+                register uint32_t pix;
+                pix  = pal[*src++];
+                pix |= (pal[*src++])<<8;
+                pix |= (pal[*src++])<<16;
+                pix |= (pal[*src++])<<24;
+                *dst++ = pix;
+            }
+        }
+    }
+	SDL_Flip(real_screen);
+}
+#endif
+
 //
 // I_UpdateNoBlit
 //
 void I_UpdateNoBlit(void)
 {
+#ifdef RS90
+	Update_RS90_blit();
+#else
 	if (!vidSurface)
 		return;
 #ifdef HWRENDER
@@ -1312,6 +1395,7 @@ void I_UpdateNoBlit(void)
 		SDL_Flip(vidSurface);
 	else if (exposevideo)
 		SDL_UpdateRect(vidSurface, 0, 0, 0, 0);
+#endif
 	exposevideo = SDL_FALSE;
 }
 
@@ -1511,12 +1595,16 @@ void I_FinishUpdate(void)
 			SDL_GP2X_WaitForBlitter();
 #endif
 
+#ifdef RS90
+		Update_RS90_blit();
+#else
 		if (lockedsf == 0 && blited == 0 && vidSurface->flags&SDL_DOUBLEBUF)
 			SDL_Flip(vidSurface);
 		else if (blited != -2 && lockedsf == 0) //Alam: -2 for Win32 Direct, yea, i know
 			SDL_UpdateRect(vidSurface, rect.x, rect.y, 0, 0); //Alam: almost always
 		else
 			I_OutputMsg("%s\n",SDL_GetError());
+#endif
 	}
 #ifdef HWRENDER
 	else
@@ -1565,6 +1653,9 @@ void I_SetPalette(RGBA_t *palette)
 	}
 	if (vidSurface) SDL_SetColors(vidSurface, localPalette, 0, 256);
 	if (bufSurface) SDL_SetColors(bufSurface, localPalette, 0, 256);
+#ifdef RS90
+	Update_Hardware_Palette();
+#endif
 }
 
 // return number of fullscreen + X11 modes
@@ -2045,6 +2136,9 @@ void I_StartupGraphics(void)
 #elif defined(GCW0)
 		vid.width = 320;
 		vid.height = 240;
+#elif defined(RS90)
+		vid.width = 320;
+		vid.height = 200;
 #else
 		vid.width = BASEVIDWIDTH;
 		vid.height = BASEVIDHEIGHT;
