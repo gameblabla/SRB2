@@ -4,13 +4,13 @@ PRGNAME     = opk/srb2.elf
 CC          = /opt/gcw0-toolchain/usr/bin/mipsel-linux-gcc
 PORT		= sdl12
 HUGE_PAGES	= 1
-PROFILE		= APPLY
+PROFILE		= 0
 
 # change compilation / linking flag options
 CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell /opt/gcw0-toolchain/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --cflags)
 CFLAGS		+= -fno-exceptions -Isrc -Isrc/$(PORT)
 CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG 
-CFLAGS		+= -DGCW0 -DGCW0_OPTS -DNOPOSTPROCESSING
+CFLAGS		+= -DGCW0 -DGCW0_OPTS -DNOPOSTPROCESSING -DGCW0_INPUT
 CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2 -mplt -mno-shared -mno-fp-exceptions -mno-check-zero-division -fno-common
 
 ifeq ($(PROFILE), YES)

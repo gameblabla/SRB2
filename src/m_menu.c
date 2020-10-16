@@ -1333,7 +1333,7 @@ static menuitem_t OP_VideoOptionsMenu[] =
 {
 	{IT_HEADER, NULL, "Screen", NULL, 0},
 	
-#ifndef GCW0
+#ifndef GCW0_INPUT
 	{IT_STRING | IT_CALL,  NULL, "Set Resolution...",       M_VideoModeMenu,          6},
 
 #if (defined (__unix__) && !defined (MSDOS)) || defined (UNIXCOMMON) || defined (HAVE_SDL)
@@ -3502,7 +3502,7 @@ boolean M_Responder(event_t *ev)
 			return true;
 
 		case KEY_ENTER:
-		#ifdef GCW0
+		#ifdef GCW0_INPUT
 		case KEY_LCTRL:
 		#endif
 			noFurtherInput = true;
@@ -3541,7 +3541,7 @@ boolean M_Responder(event_t *ev)
 			return true;
 
 		case KEY_ESCAPE:
-		#ifdef GCW0
+		#ifdef GCW0_INPUT
 		case KEY_LALT:
 		#endif
 			noFurtherInput = true;

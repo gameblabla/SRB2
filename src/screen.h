@@ -42,7 +42,10 @@
 #if defined(RS90)
 #define MAXVIDWIDTH 320 //720
 #define MAXVIDHEIGHT 200 //576
-#elif defined (GP2X) || defined(GCW0)
+#elif defined(GCW0)
+#define MAXVIDWIDTH 640 //720
+#define MAXVIDHEIGHT 480 //576
+#elif defined (GP2X) || defined(BITTBOY)
 #define MAXVIDWIDTH 320 //720
 #define MAXVIDHEIGHT 240 //576
 #else

@@ -1,4 +1,4 @@
-PRGNAME     = opk/srb2.elf
+PRGNAME     = opk_rs90/srb2.elf
 
 # define regarding OS, which compiler to use
 CC          = /opt/rs90-toolchain/usr/bin/mipsel-linux-gcc

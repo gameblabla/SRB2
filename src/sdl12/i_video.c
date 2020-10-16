@@ -133,7 +133,7 @@ SDL_Surface* real_screen;
 #endif
 
 // maximum number of windowed modes (see windowedModes[][])
-#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(GCW0) || defined(RS90)
+#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(RS90) || defined(BITTBOY) || defined (GCW0)
 #define MAXWINMODES (1)
 #elif defined (WII)
 #define MAXWINMODES (8)
@@ -217,6 +217,8 @@ static INT32 windowedModes[MAXWINMODES][2] =
 #if defined(RS90)
 	{ 320, 200}, // 1.33,1.00
 #elif defined(GCW0)
+	{ 320, 240}, // 1.33,1.00
+#elif defined(BITTBOY)
 	{ 320, 240}, // 1.33,1.00
 #else
 #if !(defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined (GP2X))
@@ -319,9 +321,36 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	if (vidSurface)
 		return;
 	bpp = 8;
+	vidSurface = SDL_SetVideoMode(640, 480, bpp, SDL_HWSURFACE | SDL_HWPALETTE);
+	if (!vidSurface)
+	{
+		vidSurface = SDL_SetVideoMode(320, 240, bpp, SDL_HWSURFACE | SDL_HWPALETTE);
+		if (!vidSurface)
+		{
+			bpp = 16;
+			vidSurface = SDL_SetVideoMode(320, 240, bpp, SDL_HWSURFACE);
+			if (!vidSurface)
+			{
+				return;
+			}
+		}
+		
+	}
+	width = vidSurface->w;
+	height = vidSurface->h;
+	vid.width = width;
+	vid.height = height;
+	windowedModes[0][0] = width;
+	windowedModes[0][1] = height;
+	if (!vidSurface)
+		return;
+#elif BITTBOY
+	if (vidSurface)
+		return;
+	bpp = 16;
 	width = 320;
 	height = 240;
-	vidSurface = SDL_SetVideoMode(width, height, bpp, SDL_HWSURFACE | SDL_HWPALETTE);
+	vidSurface = SDL_SetVideoMode(width, height, bpp, SDL_HWSURFACE);
 	if (!vidSurface)
 		return;
 #else
@@ -347,7 +376,7 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	SDL_DC_EmulateMouse(SDL_FALSE);
 	SDL_DC_EmulateKeyboard(SDL_TRUE);
 #endif
-#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) 
+#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) 
 	SDL_ShowCursor(SDL_DISABLE); //For GP2X Open2x
 #endif
 #ifdef FILTERS
@@ -2133,6 +2162,9 @@ void I_StartupGraphics(void)
 #elif defined(_PS3)
 		vid.width = 720;
 		vid.height = 480;
+#elif defined(BITTBOY)
+		vid.width = 320;
+		vid.height = 240;
 #elif defined(GCW0)
 		vid.width = 320;
 		vid.height = 240;

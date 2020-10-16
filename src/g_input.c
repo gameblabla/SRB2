@@ -770,7 +770,7 @@ void G_DefineDefaultControls(void)
 		//gamecontrolbisdefault[i][gc_scores    ][0] = KEY_2HAT1+3; // D-Pad Right
 	}
 	
-	#ifdef GCW0
+	#ifdef GCW0_INPUT
 	// FPS game controls (WASD)
 	gamecontroldefault[gcs_fps][gc_forward    ][0] = KEY_UPARROW;
 	gamecontroldefault[gcs_fps][gc_backward   ][0] = KEY_DOWNARROW;
