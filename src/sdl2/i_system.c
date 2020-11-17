@@ -1685,7 +1685,7 @@ void I_GetMouseEvents(void)
 	static UINT8 mdata[5];
 	static INT32 i = 0,om2b = 0;
 	INT32 di, j, mlp, button;
-	event_t event;
+	event_t event = {0, 0, 0, 0};
 	const INT32 mswap[8] = {0, 4, 1, 5, 2, 6, 3, 7};
 
 	if (!mouse2_started) return;
@@ -2222,16 +2222,15 @@ static void I_Fork(void)
 		case 0:
 			break;
 		default:
+#ifdef LOGMESSAGES
 			if (logstream)
 				fclose(logstream);/* the child has this */
-
+#endif
 			c = wait(&status);
 
 #ifdef LOGMESSAGES
 			/* By the way, exit closes files. */
 			logstream = fopen(logfilename, "at");
-#else
-			logstream = 0;
 #endif
 
 			if (c == -1)

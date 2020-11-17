@@ -133,7 +133,7 @@ SDL_Surface* real_screen;
 #endif
 
 // maximum number of windowed modes (see windowedModes[][])
-#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(RS90) || defined(BITTBOY) || defined (GCW0)
+#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(RS90) || defined(BITTBOY) || defined (GCW0) || defined (OGA)
 #define MAXWINMODES (1)
 #elif defined (WII)
 #define MAXWINMODES (8)
@@ -220,6 +220,8 @@ static INT32 windowedModes[MAXWINMODES][2] =
 	{ 320, 240}, // 1.33,1.00
 #elif defined(BITTBOY)
 	{ 320, 240}, // 1.33,1.00
+#elif defined(OGA)
+	{ 480, 320}, // 1.33,1.00
 #else
 #if !(defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined (GP2X))
 #ifndef WII
@@ -344,6 +346,15 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	windowedModes[0][1] = height;
 	if (!vidSurface)
 		return;
+#elif OGA
+	if (vidSurface)
+		return;
+	bpp = 16;
+	width = 480;
+	height = 320;
+	vidSurface = SDL_SetVideoMode(width, height, bpp, SDL_HWSURFACE);
+	if (!vidSurface)
+		return;
 #elif BITTBOY
 	if (vidSurface)
 		return;
@@ -376,7 +387,7 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	SDL_DC_EmulateMouse(SDL_FALSE);
 	SDL_DC_EmulateKeyboard(SDL_TRUE);
 #endif
-#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) 
+#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) || defined(OGA) 
 	SDL_ShowCursor(SDL_DISABLE); //For GP2X Open2x
 #endif
 #ifdef FILTERS
@@ -2165,6 +2176,9 @@ void I_StartupGraphics(void)
 #elif defined(BITTBOY)
 		vid.width = 320;
 		vid.height = 240;
+#elif defined(OGA)
+		vid.width = 480;
+		vid.height = 320;
 #elif defined(GCW0)
 		vid.width = 320;
 		vid.height = 240;

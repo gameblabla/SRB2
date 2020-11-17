@@ -84,7 +84,11 @@
 #endif
 
 // maximum number of windowed modes (see windowedModes[][])
+#ifdef OGA
+#define MAXWINMODES (1)
+#else
 #define MAXWINMODES (18)
+#endif
 
 /**	\brief
 */
@@ -151,6 +155,9 @@ static const char *fallback_resolution_name = "Fallback";
 // windowed video modes from which to choose from.
 static INT32 windowedModes[MAXWINMODES][2] =
 {
+#ifdef OGA
+	{ 480, 320} // 1.60,1.00
+#else
 	{1920,1200}, // 1.60,6.00
 	{1920,1080}, // 1.66
 	{1680,1050}, // 1.60,5.25
@@ -169,6 +176,7 @@ static INT32 windowedModes[MAXWINMODES][2] =
 	{ 640, 400}, // 1.60,2.00
 	{ 320, 240}, // 1.33,1.00
 	{ 320, 200}, // 1.60,1.00
+#endif
 };
 
 static void Impl_VideoSetupSDLBuffer(void);
@@ -638,7 +646,7 @@ static void Impl_HandleWindowEvent(SDL_WindowEvent evt)
 
 static void Impl_HandleKeyboardEvent(SDL_KeyboardEvent evt, Uint32 type)
 {
-	event_t event;
+	event_t event = {0, 0, 0, 0};
 	if (type == SDL_KEYUP)
 	{
 		event.type = ev_keyup;
@@ -705,7 +713,7 @@ static void Impl_HandleMouseMotionEvent(SDL_MouseMotionEvent evt)
 
 static void Impl_HandleMouseButtonEvent(SDL_MouseButtonEvent evt, Uint32 type)
 {
-	event_t event;
+	event_t event = {0, 0, 0, 0};
 
 	SDL_memset(&event, 0, sizeof(event_t));
 
@@ -748,7 +756,7 @@ static void Impl_HandleMouseButtonEvent(SDL_MouseButtonEvent evt, Uint32 type)
 
 static void Impl_HandleMouseWheelEvent(SDL_MouseWheelEvent evt)
 {
-	event_t event;
+	event_t event = {0, 0, 0, 0};
 
 	SDL_memset(&event, 0, sizeof(event_t));
 
@@ -775,7 +783,7 @@ static void Impl_HandleMouseWheelEvent(SDL_MouseWheelEvent evt)
 
 static void Impl_HandleJoystickAxisEvent(SDL_JoyAxisEvent evt)
 {
-	event_t event;
+	event_t event = {0, 0, 0, 0};
 	SDL_JoystickID joyid[2];
 
 	// Determine the Joystick IDs for each current open joystick
@@ -815,7 +823,7 @@ static void Impl_HandleJoystickAxisEvent(SDL_JoyAxisEvent evt)
 #if 0
 static void Impl_HandleJoystickHatEvent(SDL_JoyHatEvent evt)
 {
-	event_t event;
+	event_t event = {0, 0, 0, 0};
 	SDL_JoystickID joyid[2];
 
 	// Determine the Joystick IDs for each current open joystick
@@ -841,7 +849,7 @@ static void Impl_HandleJoystickHatEvent(SDL_JoyHatEvent evt)
 
 static void Impl_HandleJoystickButtonEvent(SDL_JoyButtonEvent evt, Uint32 type)
 {
-	event_t event;
+	event_t event = {0, 0, 0, 0};
 	SDL_JoystickID joyid[2];
 
 	// Determine the Joystick IDs for each current open joystick
@@ -1068,7 +1076,7 @@ void I_GetEvent(void)
 	// Send all relative mouse movement as one single mouse event.
 	if (mousemovex || mousemovey)
 	{
-		event_t event;
+		event_t event = {0, 0, 0, 0};
 		int wwidth, wheight;
 		SDL_GetWindowSize(window, &wwidth, &wheight);
 		//SDL_memset(&event, 0, sizeof(event_t));

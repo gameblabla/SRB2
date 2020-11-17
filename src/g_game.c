@@ -345,7 +345,7 @@ consvar_t cv_analog[2] = {
 	{"sessionanalog2", "Off", CV_CALL|CV_NOSHOWHELP, CV_OnOff, Analog2_OnChange, 0, NULL, NULL, 0, 0, NULL}
 };
 
-#ifdef GCW0_INPUT
+#if defined(GCW0_INPUT) || defined(OGA)
 consvar_t cv_useranalog[2] = {
 	{"configanalog", "On", CV_SAVE|CV_CALL|CV_NOSHOWHELP, CV_OnOff, UserAnalog_OnChange, 0, NULL, NULL, 0, 0, NULL},
 	{"configanalog2", "On", CV_SAVE|CV_CALL|CV_NOSHOWHELP, CV_OnOff, UserAnalog2_OnChange, 0, NULL, NULL, 0, 0, NULL}
