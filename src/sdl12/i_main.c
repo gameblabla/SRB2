@@ -208,8 +208,15 @@ int SDL_main(int argc, char **argv)
 int main(int argc, char **argv)
 #endif
 {
+	char home_path[128];
 	myargc = argc;
 	myargv = argv; /// \todo pull out path to exe from this string
+	
+	snprintf(home_path, sizeof(home_path), "%s/.srb2", getenv("HOME"));
+	if (access( home_path, F_OK ) == -1)
+	{
+		mkdir(home_path, 0755);
+	}
 
 #ifdef HAVE_TTF
 #ifdef _WIN32

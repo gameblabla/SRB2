@@ -39,7 +39,7 @@ OBJS     = $(OBJ_C)
 
 # Rules to make executable
 $(PRGNAME): $(OBJS)  
-	$(CC) $^ -o $(PRGNAME) $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o $(PRGNAME) $(LDFLAGS)
 ifeq ($(HUGE_PAGES), 1)
 	hugeedit --text --data $(PRGNAME)
 endif
