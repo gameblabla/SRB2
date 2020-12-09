@@ -3,17 +3,16 @@ PRGNAME     = opk/srb2.elf
 # define regarding OS, which compiler to use
 CC          = /opt/gcw0-toolchain-static/usr/bin/mipsel-linux-gcc
 PORT		= sdl12
-PROFILE		= APPLY
+PROFILE		= 0
 
 # change compilation / linking flag options
-CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell /opt/gcw0-toolchain/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --cflags)
+CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell /opt/gcw0-toolchain-static/mipsel-buildroot-linux-musl/sysroot/usr/bin/sdl-config --cflags)
 CFLAGS		+= -fno-exceptions -Isrc -Isrc/$(PORT)
 CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG -DNOMD5
 CFLAGS		+= -DBITTBOY -DGCW0_OPTS -DGCW0_INPUT -DNOPOSTPROCESSING -DLOWMEMORY
-CFLAGS		+= -Os -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2 -fno-PIC -mno-abicalls -mno-fp-exceptions -mno-check-zero-division -fno-common
+CFLAGS		+= -Ofast -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2 -mno-abicalls -mno-shared -mno-fp-exceptions -mno-check-zero-division -fno-common
 
-LDFLAGS_SDL = $(shell /opt/gcw0-toolchain-static/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/sdl-config --libs) -lSDL_mixer
-LDFLAGS     =  -nodefaultlibs -lc -lgcc $(LDFLAGS_SDL) -lSDL_mixer -logg -lvorbisidec -lmikmod -lmad -lpng -lrt -lm -lz -no-pie -Wl,--as-needed -Wl,--gc-sections -flto -s
+LDFLAGS     =  -nodefaultlibs -lc -lgcc -lSDL -lasound -lSDL_mixer -logg -lvorbisidec -lmikmod -lmad -lpng -lrt -lm -lz -no-pie -Wl,--as-needed -Wl,--gc-sections -flto -s
 
 ifeq ($(PROFILE), YES)
 CFLAGS		+= -fprofile-generate=/media/roms/350h_srb2
