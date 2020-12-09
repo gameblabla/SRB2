@@ -333,8 +333,8 @@ consvar_t cv_invertmouse = {"invertmouse", "Off", CV_SAVE, CV_OnOff, NULL, 0, NU
 consvar_t cv_alwaysfreelook = {"alwaysmlook", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_invertmouse2 = {"invertmouse2", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_alwaysfreelook2 = {"alwaysmlook2", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_chasefreelook = {"chasemlook", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_chasefreelook2 = {"chasemlook2", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_chasefreelook = {"chasemlook", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_chasefreelook2 = {"chasemlook2", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_mousemove = {"mousemove", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_mousemove2 = {"mousemove2", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 
@@ -430,15 +430,15 @@ typedef enum
 	AXISFIRENORMAL,
 } axis_input_e;
 
-consvar_t cv_turnaxis = {"joyaxis_turn", "X-Rudder", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_turnaxis = {"joyaxis_turn", "Z-Axis", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_moveaxis = {"joyaxis_move", "Y-Axis", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_sideaxis = {"joyaxis_side", "X-Axis", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_lookaxis = {"joyaxis_look", "Y-Rudder-", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_lookaxis = {"joyaxis_look", "X-Rudder-", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_jumpaxis = {"joyaxis_jump", "None", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_spinaxis = {"joyaxis_spin", "None", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_fireaxis = {"joyaxis_fire", "Z-Axis-", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_firenaxis = {"joyaxis_firenormal", "Z-Axis", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_deadzone = {"joy_deadzone", "0.125", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_fireaxis = {"joyaxis_fire", "None", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_firenaxis = {"joyaxis_firenormal", "None", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_deadzone = {"joy_deadzone", "0.25", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_digitaldeadzone = {"joy_digdeadzone", "0.25", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 
 consvar_t cv_turnaxis2 = {"joyaxis2_turn", "X-Rudder", CV_SAVE, joyaxis_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
