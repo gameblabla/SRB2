@@ -623,7 +623,9 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 /// on the bright side it fixes some weird issues with translucent walls
 /// \note	SRB2CB port.
 ///      	SRB2CB itself ported this from PrBoom+
+#ifndef GCW0_OPTS
 #define NEWCLIP
+#endif
 
 /// OpenGL shaders
 #ifndef GCW0_OPTS
@@ -638,7 +640,9 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 //#define LUA_PATCH_SAFETY
 
 /// Sprite rotation
+#ifndef GCW0_OPTS
 #define ROTSPRITE
+#endif
 #define ROTANGLES 72 // Needs to be a divisor of 360 (45, 60, 90, 120...)
 #define ROTANGDIFF (360 / ROTANGLES)
 
@@ -651,7 +655,9 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 #define WALLFLATS
 
 /// Maintain compatibility with older 2.2 demos
+#ifndef GCW0_OPTS
 #define OLD22DEMOCOMPAT
+#endif
 
 #if defined (HAVE_CURL) && ! defined (NONET)
 #define MASTERSERVER
