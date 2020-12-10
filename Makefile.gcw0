@@ -12,7 +12,7 @@ CFLAGS		+= -Isrc -Isrc/$(PORT)
 CFLAGS		+= -DDIRECTFULLSCREEN -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG -DNOMD5
 CFLAGS		+= -DGCW0 -DGCW0_OPTS -DNOPOSTPROCESSING -DGCW0_INPUT
 CFLAGS		+= -Ofast -fsingle-precision-constant -fdata-sections -ffunction-sections -flto -mframe-header-opt -march=mips32r2 -mtune=mips32r2 -mplt -mno-shared -mno-fp-exceptions -mno-check-zero-division -fno-common
-CFLAGS		+= -fsection-anchors -fno-builtin
+CFLAGS		+= -fno-builtin
 
 ifeq ($(PROFILE), YES)
 CFLAGS		+= -fprofile-generate=/usr/local/home/srb2_gcda
