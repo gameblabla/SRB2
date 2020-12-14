@@ -62,6 +62,10 @@ static CV_PossibleValue_t scr_depth_cons_t[] = {{8, "8 bits"}, {16, "16 bits"}, 
 consvar_t cv_scr_width = {"scr_width", "320", CV_SAVE, CV_Unsigned, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_scr_height = {"scr_height", "200", CV_SAVE, CV_Unsigned, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_scr_depth = {"scr_depth", "8 bits", CV_SAVE, scr_depth_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
+#elif defined(FUNKEY)
+consvar_t cv_scr_width = {"scr_width", "320", CV_SAVE, CV_Unsigned, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_scr_height = {"scr_height", "200", CV_SAVE, CV_Unsigned, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_scr_depth = {"scr_depth", "16 bits", CV_SAVE, scr_depth_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 #elif defined(GCW0)
 consvar_t cv_scr_width = {"scr_width", "320", CV_SAVE, CV_Unsigned, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_scr_height = {"scr_height", "240", CV_SAVE, CV_Unsigned, NULL, 0, NULL, NULL, 0, 0, NULL};

@@ -129,11 +129,14 @@
 
 #ifdef RS90
 uint8_t drm_palette[3][256];
+#endif
+
+#if defined(RS90) || defined(FUNKEY)
 SDL_Surface* real_screen;
 #endif
 
 // maximum number of windowed modes (see windowedModes[][])
-#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(RS90) || defined(BITTBOY) || defined (GCW0) || defined (OGA)
+#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(RS90) || defined(BITTBOY) || defined (GCW0) || defined (OGA) || defined (FUNKEY)
 #define MAXWINMODES (1)
 #elif defined (WII)
 #define MAXWINMODES (8)
@@ -214,7 +217,7 @@ static       SDL_bool    exposevideo = SDL_FALSE;
 // windowed video modes from which to choose from.
 static INT32 windowedModes[MAXWINMODES][2] =
 {
-#if defined(RS90)
+#if defined(RS90) || defined(FUNKEY)
 	{ 320, 200}, // 1.33,1.00
 #elif defined(GCW0)
 	{ 320, 240}, // 1.33,1.00
@@ -319,6 +322,18 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	
 	if (!real_screen)
 		return;
+#elif FUNKEY
+	if (real_screen)
+		return;
+	bpp = 16;
+	width = 320;
+	height = 200;
+	
+	real_screen = SDL_SetVideoMode(240, 240, 16, SDL_HWSURFACE);
+	if (!vidSurface) vidSurface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, bpp, 0, 0, 0, 0);
+	
+	if (!real_screen)
+		return;
 #elif GCW0
 	if (vidSurface)
 		return;
@@ -387,7 +402,7 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	SDL_DC_EmulateMouse(SDL_FALSE);
 	SDL_DC_EmulateKeyboard(SDL_TRUE);
 #endif
-#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) || defined(OGA) 
+#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) || defined(OGA) || defined(FUNKEY) 
 	SDL_ShowCursor(SDL_DISABLE); //For GP2X Open2x
 #endif
 #ifdef FILTERS
@@ -790,7 +805,7 @@ static void VID_Command_Info_f (void)
 	SurfaceInfo(preSurface, M_GetText("Prebuffer Mode"));
 	SurfaceInfo(f2xSurface, M_GetText("Postbuffer Mode"));
 #endif
-#ifdef RS90
+#if defined(RS90) || defined(FUNKEY)
 	SurfaceInfo(real_screen, M_GetText("Current Video Mode"));
 #else
 	SurfaceInfo(vidSurface, M_GetText("Current Video Mode"));
@@ -1312,7 +1327,7 @@ void I_GetEvent(void)
 					if (blitfilter) CV_SetValue(&cv_filter,1);
 #endif
 					SDLSetMode(realwidth, realheight, vid.bpp*8, surfaceFlagsW);
-#ifndef RS90
+#if !defined(RS90)
 					if (vidSurface) SDL_SetColors(vidSurface, localPalette, 0, 256);
 #endif
 #ifdef FILTERS
@@ -1423,6 +1438,9 @@ void I_UpdateNoBlit(void)
 {
 #ifdef RS90
 	Update_RS90_blit();
+#elif defined(FUNKEY)
+	SDL_SoftStretch(vidSurface, NULL, real_screen, NULL);
+	SDL_UpdateRect(real_screen, 0, 0, 0, 0);
 #else
 	if (!vidSurface)
 		return;
@@ -1637,6 +1655,9 @@ void I_FinishUpdate(void)
 
 #ifdef RS90
 		Update_RS90_blit();
+#elif defined(FUNKEY)
+		SDL_SoftStretch(vidSurface, NULL, real_screen, NULL);
+		SDL_UpdateRect(real_screen, 0, 0, 0, 0);
 #else
 		if (lockedsf == 0 && blited == 0 && vidSurface->flags&SDL_DOUBLEBUF)
 			SDL_Flip(vidSurface);
@@ -2182,7 +2203,7 @@ void I_StartupGraphics(void)
 #elif defined(GCW0)
 		vid.width = 320;
 		vid.height = 240;
-#elif defined(RS90)
+#elif defined(RS90) || defined(FUNKEY)
 		vid.width = 320;
 		vid.height = 200;
 #else
