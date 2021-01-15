@@ -131,7 +131,7 @@
 uint8_t drm_palette[3][256];
 #endif
 
-#if defined(RS90) || defined(FUNKEY)
+#if defined(RS90) || defined(FUNKEY) || defined(RS1)
 SDL_Surface* real_screen;
 #endif
 
@@ -219,6 +219,8 @@ static INT32 windowedModes[MAXWINMODES][2] =
 {
 #if defined(RS90) || defined(FUNKEY)
 	{ 320, 200}, // 1.33,1.00
+#elif defined(RS1)
+	{ 640, 480}, // 1.33,1.00
 #elif defined(GCW0)
 	{ 320, 240}, // 1.33,1.00
 #elif defined(BITTBOY)
@@ -334,6 +336,18 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	
 	if (!real_screen)
 		return;
+#elif RS1
+	if (real_screen)
+		return;
+	bpp = 16;
+	width = 640;
+	height = 480;
+	
+	real_screen = SDL_SetVideoMode(0, 0, 16, SDL_HWSURFACE);
+	if (!vidSurface) vidSurface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, bpp, 0, 0, 0, 0);
+	
+	if (!real_screen)
+		return;
 #elif GCW0
 	if (vidSurface)
 		return;
@@ -402,7 +416,7 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	SDL_DC_EmulateMouse(SDL_FALSE);
 	SDL_DC_EmulateKeyboard(SDL_TRUE);
 #endif
-#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) || defined(OGA) || defined(FUNKEY) 
+#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) || defined(OGA) || defined(FUNKEY) || defined(RS1) 
 	SDL_ShowCursor(SDL_DISABLE); //For GP2X Open2x
 #endif
 #ifdef FILTERS
@@ -805,7 +819,7 @@ static void VID_Command_Info_f (void)
 	SurfaceInfo(preSurface, M_GetText("Prebuffer Mode"));
 	SurfaceInfo(f2xSurface, M_GetText("Postbuffer Mode"));
 #endif
-#if defined(RS90) || defined(FUNKEY)
+#if defined(RS90) || defined(FUNKEY) || defined(RS1)
 	SurfaceInfo(real_screen, M_GetText("Current Video Mode"));
 #else
 	SurfaceInfo(vidSurface, M_GetText("Current Video Mode"));
@@ -1438,7 +1452,7 @@ void I_UpdateNoBlit(void)
 {
 #ifdef RS90
 	Update_RS90_blit();
-#elif defined(FUNKEY)
+#elif defined(FUNKEY) || defined(RS1)
 	SDL_SoftStretch(vidSurface, NULL, real_screen, NULL);
 	SDL_UpdateRect(real_screen, 0, 0, 0, 0);
 #else
@@ -1655,7 +1669,7 @@ void I_FinishUpdate(void)
 
 #ifdef RS90
 		Update_RS90_blit();
-#elif defined(FUNKEY)
+#elif defined(FUNKEY) || defined(RS1)
 		SDL_SoftStretch(vidSurface, NULL, real_screen, NULL);
 		SDL_UpdateRect(real_screen, 0, 0, 0, 0);
 #else
@@ -2206,6 +2220,9 @@ void I_StartupGraphics(void)
 #elif defined(RS90) || defined(FUNKEY)
 		vid.width = 320;
 		vid.height = 200;
+#elif defined(RS1)
+		vid.width = 640;
+		vid.height = 480;
 #else
 		vid.width = BASEVIDWIDTH;
 		vid.height = BASEVIDHEIGHT;

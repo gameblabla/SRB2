@@ -623,9 +623,7 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 /// on the bright side it fixes some weird issues with translucent walls
 /// \note	SRB2CB port.
 ///      	SRB2CB itself ported this from PrBoom+
-#ifndef GCW0_OPTS
 #define NEWCLIP
-#endif
 
 /// OpenGL shaders
 #ifndef GCW0_OPTS
