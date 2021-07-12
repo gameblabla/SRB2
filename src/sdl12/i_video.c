@@ -127,16 +127,12 @@
 #define SDL_TRIPLEBUF SDL_DOUBLEBUF
 #endif
 
-#ifdef RS90
-uint8_t drm_palette[3][256];
-#endif
-
-#if defined(RS90) || defined(FUNKEY) || defined(RS1)
+#if defined(FUNKEY) || defined(RS1)
 SDL_Surface* real_screen;
 #endif
 
 // maximum number of windowed modes (see windowedModes[][])
-#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(RS90) || defined(BITTBOY) || defined (GCW0) || defined (OGA) || defined (FUNKEY)
+#if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X) || defined(BITTBOY) || defined (GCW0) || defined (OGA) || defined (FUNKEY)
 #define MAXWINMODES (1)
 #elif defined (WII)
 #define MAXWINMODES (8)
@@ -144,6 +140,10 @@ SDL_Surface* real_screen;
 #define MAXWINMODES (26)
 #else
 #define MAXWINMODES (27)
+#endif
+
+#ifndef SDL_YUV444
+#define SDL_YUV444 0
 #endif
 
 /**	\brief
@@ -159,7 +159,7 @@ rendermode_t rendermode=render_soft;
 boolean highcolor = false;
 
 // synchronize page flipping with screen refresh
-#if defined(DC) || (defined(GP2X) && !defined(HAVE_GP2XSDL))
+#if defined(DC) || (defined(GP2X) && !defined(HAVE_GP2XSDL)) || defined(GCW0)
 consvar_t cv_vidwait = {"vid_wait", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 #else
 consvar_t cv_vidwait = {"vid_wait", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
@@ -217,7 +217,7 @@ static       SDL_bool    exposevideo = SDL_FALSE;
 // windowed video modes from which to choose from.
 static INT32 windowedModes[MAXWINMODES][2] =
 {
-#if defined(RS90) || defined(FUNKEY)
+#if defined(FUNKEY)
 	{ 320, 200}, // 1.33,1.00
 #elif defined(RS1)
 	{ 640, 480}, // 1.33,1.00
@@ -264,25 +264,6 @@ static INT32 windowedModes[MAXWINMODES][2] =
 #endif
 };
 
-#ifdef RS90
-#define UINT16_16(val) ((uint32_t)(val * (float)(1<<16)))
-static const uint32_t YUV_MAT[3][3] = {
-	{UINT16_16(0.2999f),   UINT16_16(0.587f),    UINT16_16(0.114f)},
-	{UINT16_16(0.168736f), UINT16_16(0.331264f), UINT16_16(0.5f)},
-	{UINT16_16(0.5f),      UINT16_16(0.418688f), UINT16_16(0.081312f)}
-};
-static void Update_Hardware_Palette(void)
-{
-	int i;
-	for (i = 0; i < 256; i++)
-	{
-		drm_palette[0][i] = ( ( UINT16_16(  0) + YUV_MAT[0][0] * localPalette[i].r + YUV_MAT[0][1] * localPalette[i].g + YUV_MAT[0][2] * localPalette[i].b) >> 16 );
-		drm_palette[1][i] = ( ( UINT16_16(128) - YUV_MAT[1][0] * localPalette[i].r - YUV_MAT[1][1] * localPalette[i].g + YUV_MAT[1][2] * localPalette[i].b) >> 16 );
-		drm_palette[2][i] = ( ( UINT16_16(128) + YUV_MAT[2][0] * localPalette[i].r - YUV_MAT[2][1] * localPalette[i].g - YUV_MAT[2][2] * localPalette[i].b) >> 16 );
-	}
-}
-#endif
-
 static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 {
 	const char *SDLVD = I_GetEnv("SDL_VIDEODRIVER");
@@ -312,19 +293,7 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 #endif
 
 /* The new OD firmwares support 8-bits paletted support */
-#ifdef RS90
-	if (real_screen)
-		return;
-	bpp = 8;
-	width = 320;
-	height = 200;
-	
-	real_screen = SDL_SetVideoMode(width, height, 24, SDL_HWSURFACE|SDL_YUV444);
-	if (!vidSurface) vidSurface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, bpp, 0, 0, 0, 0);
-	
-	if (!real_screen)
-		return;
-#elif FUNKEY
+#if FUNKEY
 	if (real_screen)
 		return;
 	bpp = 16;
@@ -349,24 +318,50 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	if (!real_screen)
 		return;
 #elif GCW0
+	uint32_t s_width = 0, s_height = 0;
+
 	if (vidSurface)
 		return;
+	
+	vidSurface = SDL_SetVideoMode(0, 0, 8, SDL_HWSURFACE);
 	bpp = 8;
-	vidSurface = SDL_SetVideoMode(640, 480, bpp, SDL_HWSURFACE | SDL_HWPALETTE);
-	if (!vidSurface)
+	
+	s_width = vidSurface->w;
+	s_height = vidSurface->h;
+	
+	if (vidSurface)
 	{
-		vidSurface = SDL_SetVideoMode(320, 240, bpp, SDL_HWSURFACE | SDL_HWPALETTE);
-		if (!vidSurface)
-		{
-			bpp = 16;
-			vidSurface = SDL_SetVideoMode(320, 240, bpp, SDL_HWSURFACE);
+		SDL_FreeSurface(vidSurface);
+		vidSurface = NULL;
+	}
+	
+	switch(s_width)
+	{
+		case 640:
+			vidSurface = SDL_SetVideoMode(640, 480, 8, SDL_HWSURFACE | SDL_HWPALETTE);
+		break;
+		case 320:
+			if (s_height == 240)
+			{
+				vidSurface = SDL_SetVideoMode(320, 240, 8, SDL_HWSURFACE | SDL_HWPALETTE);
+			}
+			else
+			{
+				vidSurface = SDL_SetVideoMode(320, 240, 8, SDL_HWSURFACE);
+			}
+		break;
+		default:
+			vidSurface = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE);
 			if (!vidSurface)
 			{
-				return;
+				// If it can't be initialized then use the YUV emulation
+				vidSurface = SDL_SetVideoMode(320, 200, 8, SDL_HWSURFACE | SDL_YUV444 | SDL_HWPALETTE);
 			}
-		}
-		
+		break;
 	}
+	
+	if (!vidSurface) return;
+	
 	width = vidSurface->w;
 	height = vidSurface->h;
 	vid.width = width;
@@ -416,7 +411,7 @@ static void SDLSetMode(INT32 width, INT32 height, INT32 bpp, Uint32 flags)
 	SDL_DC_EmulateMouse(SDL_FALSE);
 	SDL_DC_EmulateKeyboard(SDL_TRUE);
 #endif
-#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(RS90) || defined(BITTBOY) || defined(OGA) || defined(FUNKEY) || defined(RS1) 
+#if defined(HAVE_GP2XSDL) || defined(GCW0) || defined(BITTBOY) || defined(OGA) || defined(FUNKEY) || defined(RS1) 
 	SDL_ShowCursor(SDL_DISABLE); //For GP2X Open2x
 #endif
 #ifdef FILTERS
@@ -819,7 +814,7 @@ static void VID_Command_Info_f (void)
 	SurfaceInfo(preSurface, M_GetText("Prebuffer Mode"));
 	SurfaceInfo(f2xSurface, M_GetText("Postbuffer Mode"));
 #endif
-#if defined(RS90) || defined(FUNKEY) || defined(RS1)
+#if defined(FUNKEY) || defined(RS1)
 	SurfaceInfo(real_screen, M_GetText("Current Video Mode"));
 #else
 	SurfaceInfo(vidSurface, M_GetText("Current Video Mode"));
@@ -1341,9 +1336,7 @@ void I_GetEvent(void)
 					if (blitfilter) CV_SetValue(&cv_filter,1);
 #endif
 					SDLSetMode(realwidth, realheight, vid.bpp*8, surfaceFlagsW);
-#if !defined(RS90)
-					if (vidSurface) SDL_SetColors(vidSurface, localPalette, 0, 256);
-#endif
+					if (vidSurface) SDL_SetPalette(vidSurface, SDL_LOGPAL|SDL_PHYSPAL, localPalette, 0, 256);
 #ifdef FILTERS
 					CV_SetValue(&cv_filter,filtervalue);
 #endif
@@ -1403,58 +1396,16 @@ void I_OsPolling(void)
 	I_GetEvent();
 }
 
-#ifdef RS90
-void Update_RS90_blit(void)
-{
-	uint16_t height = 200;
-	uint16_t width = 320;
-	uint16_t i;
-	uint_fast8_t j, a, plane;
-	uint8_t* dst_yuv[3];
-	uint32_t srcwidth = vidSurface->w;
-	uint8_t *srcbase = vidSurface->pixels;
-	dst_yuv[0] = real_screen->pixels;
-	dst_yuv[1] = dst_yuv[0] + height * real_screen->pitch;
-	dst_yuv[2] = dst_yuv[1] + height * real_screen->pitch;
-    for (plane=0; plane<3; plane++) /* The three Y, U and V planes */
-    {
-        uint32_t y;
-        register uint8_t *pal = drm_palette[plane];
-        for (y=0; y < height; y++)   /* The number of lines to copy */
-        {
-            register uint8_t *src = srcbase + (y*srcwidth);
-            register uint8_t *end = src + width;
-            register uint32_t *dst = (uint32_t *)&dst_yuv[plane][width * y];
-
-             __builtin_prefetch(pal, 0, 1 );
-             __builtin_prefetch(src, 0, 1 );
-             __builtin_prefetch(dst, 1, 0 );
-
-            while (src < end)       /* The actual line data to copy */
-            {
-                register uint32_t pix;
-                pix  = pal[*src++];
-                pix |= (pal[*src++])<<8;
-                pix |= (pal[*src++])<<16;
-                pix |= (pal[*src++])<<24;
-                *dst++ = pix;
-            }
-        }
-    }
-	SDL_Flip(real_screen);
-}
-#endif
-
 //
 // I_UpdateNoBlit
 //
 void I_UpdateNoBlit(void)
 {
-#ifdef RS90
-	Update_RS90_blit();
-#elif defined(FUNKEY) || defined(RS1)
+#if defined(FUNKEY) || defined(RS1)
 	SDL_SoftStretch(vidSurface, NULL, real_screen, NULL);
 	SDL_UpdateRect(real_screen, 0, 0, 0, 0);
+#elif defined(GCW0)
+	SDL_Flip(vidSurface);
 #else
 	if (!vidSurface)
 		return;
@@ -1517,6 +1468,25 @@ static inline SDL_bool SDLmatchVideoformat(void)
 //
 void I_FinishUpdate(void)
 {
+#if defined(GCW0)
+	if (!vidSurface)
+		return; //Alam: No software or OpenGl surface
+
+	if (vidSurface->format->BitsPerPixel == 8)
+	{
+		vidSurface->pixels = screens[0];
+		SDL_Flip(vidSurface);
+	}
+	else
+	{
+		if (!bufSurface)
+		{
+			bufSurface = SDL_CreateRGBSurfaceFrom(screens[0],vid.width,vid.height,8, (int)vid.rowbytes,0x00000000,0x00000000,0x00000000,0x00000000); // 256 mode
+		}
+		SDL_BlitSurface(bufSurface, NULL, vidSurface, NULL);
+		SDL_Flip(vidSurface);
+	}
+#else
 	if (!vidSurface)
 		return; //Alam: No software or OpenGl surface
 
@@ -1548,7 +1518,7 @@ void I_FinishUpdate(void)
 				(int)vid.rowbytes,0x00000000,0x00000000,0x00000000,0x00000000); // 256 mode
 			else if (vid.bpp == 2) bufSurface = SDL_CreateRGBSurfaceFrom(screens[0],vid.width,vid.height,15,
 				(int)vid.rowbytes,0x00007C00,0x000003E0,0x0000001F,0x00000000); // 555 mode
-			if (bufSurface) SDL_SetColors(bufSurface, localPalette, 0, 256);
+			if (bufSurface) SDL_SetPalette(bufSurface, SDL_LOGPAL|SDL_PHYSPAL, localPalette, 0, 256);
 			else I_OutputMsg("No system memory for SDL buffer surface\n");
 		}
 
@@ -1667,9 +1637,7 @@ void I_FinishUpdate(void)
 			SDL_GP2X_WaitForBlitter();
 #endif
 
-#ifdef RS90
-		Update_RS90_blit();
-#elif defined(FUNKEY) || defined(RS1)
+#if defined(FUNKEY) || defined(RS1)
 		SDL_SoftStretch(vidSurface, NULL, real_screen, NULL);
 		SDL_UpdateRect(real_screen, 0, 0, 0, 0);
 #else
@@ -1687,6 +1655,9 @@ void I_FinishUpdate(void)
 		OglSdlFinishUpdate(cv_vidwait.value);
 	}
 #endif
+
+#endif
+
 	exposevideo = SDL_FALSE;
 }
 
@@ -1726,11 +1697,8 @@ void I_SetPalette(RGBA_t *palette)
 		localPalette[i].g = palette[i].s.green;
 		localPalette[i].b = palette[i].s.blue;
 	}
-	if (vidSurface) SDL_SetColors(vidSurface, localPalette, 0, 256);
-	if (bufSurface) SDL_SetColors(bufSurface, localPalette, 0, 256);
-#ifdef RS90
-	Update_Hardware_Palette();
-#endif
+	if (vidSurface) SDL_SetPalette(vidSurface, SDL_LOGPAL|SDL_PHYSPAL, localPalette, 0, 256);
+	if (bufSurface) SDL_SetPalette(bufSurface, SDL_LOGPAL|SDL_PHYSPAL, localPalette, 0, 256);
 }
 
 // return number of fullscreen + X11 modes
@@ -2217,9 +2185,6 @@ void I_StartupGraphics(void)
 #elif defined(GCW0)
 		vid.width = 320;
 		vid.height = 240;
-#elif defined(RS90) || defined(FUNKEY)
-		vid.width = 320;
-		vid.height = 200;
 #elif defined(RS1)
 		vid.width = 640;
 		vid.height = 480;

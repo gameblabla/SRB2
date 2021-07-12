@@ -534,7 +534,11 @@ INT32 I_GetKey(void);
 #endif
 
 // Max gamepad/joysticks that can be detected/used.
+#ifdef FASTER
+#define MAX_JOYSTICKS 1
+#else
 #define MAX_JOYSTICKS 4
+#endif
 
 #ifndef M_PIl
 #define M_PIl 3.1415926535897932384626433832795029L
@@ -623,7 +627,9 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 /// on the bright side it fixes some weird issues with translucent walls
 /// \note	SRB2CB port.
 ///      	SRB2CB itself ported this from PrBoom+
+#ifndef FASTER
 #define NEWCLIP
+#endif
 
 /// OpenGL shaders
 #ifndef GCW0_OPTS
@@ -653,9 +659,7 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 #define WALLFLATS
 
 /// Maintain compatibility with older 2.2 demos
-#ifndef GCW0_OPTS
 #define OLD22DEMOCOMPAT
-#endif
 
 #if defined (HAVE_CURL) && ! defined (NONET)
 #define MASTERSERVER

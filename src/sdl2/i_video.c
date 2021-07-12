@@ -84,8 +84,8 @@
 #endif
 
 // maximum number of windowed modes (see windowedModes[][])
-#ifdef OGA
-#define MAXWINMODES (1)
+#if defined(OGA)
+#define MAXWINMODES (3)
 #else
 #define MAXWINMODES (18)
 #endif
@@ -156,7 +156,9 @@ static const char *fallback_resolution_name = "Fallback";
 static INT32 windowedModes[MAXWINMODES][2] =
 {
 #ifdef OGA
-	{ 480, 320} // 1.60,1.00
+	{ 800, 480}, // 1.60,1.00
+	{ 640, 480}, // 1.60,1.00
+	{ 480, 320}, // 1.60,1.00
 #else
 	{1920,1200}, // 1.60,6.00
 	{1920,1080}, // 1.66
