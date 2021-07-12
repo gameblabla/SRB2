@@ -45,7 +45,6 @@
 #include "lua_script.h"
 #include "lua_hook.h"
 #include "m_cond.h"
-#include "m_anigif.h"
 #include "md5.h"
 
 #ifdef NETGAME_DEVMODE
@@ -667,11 +666,6 @@ void D_RegisterClientCommands(void)
 	CV_RegisterVar(&cv_zlib_window_bitsa);
 	CV_RegisterVar(&cv_apng_delay);
 	CV_RegisterVar(&cv_apng_downscale);
-	// GIF variables
-	CV_RegisterVar(&cv_gif_optimize);
-	CV_RegisterVar(&cv_gif_downscale);
-	CV_RegisterVar(&cv_gif_dynamicdelay);
-	CV_RegisterVar(&cv_gif_localcolortable);
 
 	// register these so it is saved to config
 	CV_RegisterVar(&cv_playername);

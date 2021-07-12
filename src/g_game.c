@@ -333,13 +333,23 @@ consvar_t cv_invertmouse = CVAR_INIT ("invertmouse", "Off", CV_SAVE, CV_OnOff, N
 consvar_t cv_alwaysfreelook = CVAR_INIT ("alwaysmlook", "On", CV_SAVE, CV_OnOff, NULL);
 consvar_t cv_invertmouse2 = CVAR_INIT ("invertmouse2", "Off", CV_SAVE, CV_OnOff, NULL);
 consvar_t cv_alwaysfreelook2 = CVAR_INIT ("alwaysmlook2", "On", CV_SAVE, CV_OnOff, NULL);
-consvar_t cv_chasefreelook = CVAR_INIT ("chasemlook", "Off", CV_SAVE, CV_OnOff, NULL);
-consvar_t cv_chasefreelook2 = CVAR_INIT ("chasemlook2", "Off", CV_SAVE, CV_OnOff, NULL);
+consvar_t cv_chasefreelook = CVAR_INIT ("chasemlook", "On", CV_SAVE, CV_OnOff, NULL);
+consvar_t cv_chasefreelook2 = CVAR_INIT ("chasemlook2", "On", CV_SAVE, CV_OnOff, NULL);
 consvar_t cv_mousemove = CVAR_INIT ("mousemove", "Off", CV_SAVE, CV_OnOff, NULL);
 consvar_t cv_mousemove2 = CVAR_INIT ("mousemove2", "Off", CV_SAVE, CV_OnOff, NULL);
 
 // previously "analog", "analog2", "useranalog", and "useranalog2", invalidating 2.1-era copies of config.cfg
 // changed because it'd be nice to see people try out our actually good controls with gamepads now autobrake exists
+#if defined(GCW0_INPUT) || defined(OGA)
+consvar_t cv_analog[2] = {
+	CVAR_INIT ("sessionanalog", "On", CV_CALL|CV_NOSHOWHELP, CV_OnOff, Analog_OnChange),
+	CVAR_INIT ("sessionanalog2", "On", CV_CALL|CV_NOSHOWHELP, CV_OnOff, Analog2_OnChange),
+};
+consvar_t cv_useranalog[2] = {
+	CVAR_INIT ("configanalog", "On", CV_SAVE|CV_CALL|CV_NOSHOWHELP, CV_OnOff, UserAnalog_OnChange),
+	CVAR_INIT ("configanalog2", "On", CV_SAVE|CV_CALL|CV_NOSHOWHELP, CV_OnOff, UserAnalog2_OnChange),
+};
+#else
 consvar_t cv_analog[2] = {
 	CVAR_INIT ("sessionanalog", "Off", CV_CALL|CV_NOSHOWHELP, CV_OnOff, Analog_OnChange),
 	CVAR_INIT ("sessionanalog2", "Off", CV_CALL|CV_NOSHOWHELP, CV_OnOff, Analog2_OnChange),
@@ -348,6 +358,7 @@ consvar_t cv_useranalog[2] = {
 	CVAR_INIT ("configanalog", "Off", CV_SAVE|CV_CALL|CV_NOSHOWHELP, CV_OnOff, UserAnalog_OnChange),
 	CVAR_INIT ("configanalog2", "Off", CV_SAVE|CV_CALL|CV_NOSHOWHELP, CV_OnOff, UserAnalog2_OnChange),
 };
+#endif
 
 // deez New User eXperiences
 static CV_PossibleValue_t directionchar_cons_t[] = {{0, "Camera"}, {1, "Movement"}, {2, "Simple Locked"}, {0, NULL}};
@@ -422,16 +433,33 @@ typedef enum
 	AXISFIRENORMAL,
 } axis_input_e;
 
+#ifdef OGA
 consvar_t cv_turnaxis = CVAR_INIT ("joyaxis_turn", "X-Rudder", CV_SAVE, joyaxis_cons_t, NULL);
 consvar_t cv_moveaxis = CVAR_INIT ("joyaxis_move", "Y-Axis", CV_SAVE, joyaxis_cons_t, NULL);
 consvar_t cv_sideaxis = CVAR_INIT ("joyaxis_side", "X-Axis", CV_SAVE, joyaxis_cons_t, NULL);
-consvar_t cv_lookaxis = CVAR_INIT ("joyaxis_look", "Y-Rudder-", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_lookaxis = CVAR_INIT ("joyaxis_look", "Z-Axis", CV_SAVE, joyaxis_cons_t, NULL);
 consvar_t cv_jumpaxis = CVAR_INIT ("joyaxis_jump", "None", CV_SAVE, joyaxis_cons_t, NULL);
 consvar_t cv_spinaxis = CVAR_INIT ("joyaxis_spin", "None", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_digitaldeadzone = CVAR_INIT ("joy_digdeadzone", "0.25", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL);
+#else
+consvar_t cv_turnaxis = CVAR_INIT ("joyaxis_turn", "Z-Axis", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_moveaxis = CVAR_INIT ("joyaxis_move", "Y-Axis", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_sideaxis = CVAR_INIT ("joyaxis_side", "X-Axis", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_lookaxis = CVAR_INIT ("joyaxis_look", "X-Rudder-", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_jumpaxis = CVAR_INIT ("joyaxis_jump", "None", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_spinaxis = CVAR_INIT ("joyaxis_spin", "None", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_digitaldeadzone = CVAR_INIT ("joy_digdeadzone", "0.25", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL);
+#endif
+
+#ifndef DEFAULT_CONFIG
+consvar_t cv_fireaxis = CVAR_INIT ("joyaxis_fire", "None", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_firenaxis = CVAR_INIT ("joyaxis_firenormal", "None", CV_SAVE, joyaxis_cons_t, NULL);
+consvar_t cv_deadzone = CVAR_INIT ("joy_deadzone", "0.25", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL);
+#else
 consvar_t cv_fireaxis = CVAR_INIT ("joyaxis_fire", "Z-Axis-", CV_SAVE, joyaxis_cons_t, NULL);
 consvar_t cv_firenaxis = CVAR_INIT ("joyaxis_firenormal", "Z-Axis", CV_SAVE, joyaxis_cons_t, NULL);
 consvar_t cv_deadzone = CVAR_INIT ("joy_deadzone", "0.125", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL);
-consvar_t cv_digitaldeadzone = CVAR_INIT ("joy_digdeadzone", "0.25", CV_FLOAT|CV_SAVE, zerotoone_cons_t, NULL);
+#endif
 
 consvar_t cv_turnaxis2 = CVAR_INIT ("joyaxis2_turn", "X-Rudder", CV_SAVE, joyaxis_cons_t, NULL);
 consvar_t cv_moveaxis2 = CVAR_INIT ("joyaxis2_move", "Y-Axis", CV_SAVE, joyaxis_cons_t, NULL);

@@ -1,0 +1,40 @@
+PRGNAME     = opk/srb2.elf
+
+# define regarding OS, which compiler to use
+CC          = /opt/rg351p-toolchain/usr/bin/aarch64-buildroot-linux-gnu-gcc
+PORT		= sdl2
+PROFILE		= 0
+
+# change compilation / linking flag options
+CFLAGS		=  -D_GNU_SOURCE=1 -D_REENTRANT $(shell /opt/rg351p-toolchain/aarch64-buildroot-linux-gnu/sysroot/usr/bin/sdl2-config --cflags)
+CFLAGS		+= -Isrc -Isrc/$(PORT) -Wall -Wextra
+CFLAGS		+= -DHAVE_SDL -DHAVE_MIXER -DNOHW -DCOMPVERSION -DHAVE_PNG -DHAVE_ZLIB -DNDEBUG -DOGA -DGCW0_OPTS -DNOPOSTPROCESSING
+CFLAGS		+= -O3 -funsafe-math-optimizations -fdata-sections -ffunction-sections -flto 
+
+ifeq ($(PROFILE), YES)
+CFLAGS		+= -fprofile-generate=/home/oga/srb2_profile
+LDFLAGS		+= -lgcov
+else ifeq ($(PROFILE), APPLY)
+CFLAGS		+= -fprofile-use
+endif
+
+LDFLAGS_SDL = -lSDL2 -ldrm -lgbm -lrga -ludev -lopenal -lpng -levdev -lSDL_mixer
+LDFLAGS     +=  -lc -lgcc $(LDFLAGS_SDL) -lpng -ldl -pthread -lrt -lm -lz -Wl,--as-needed -Wl,--gc-sections -flto -s
+
+# Files to be compiled
+SRCDIR    = ./src ./src/$(PORT) ./src/blua
+VPATH     = $(SRCDIR)
+SRC_C   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
+OBJ_C   = $(notdir $(patsubst %.c, %.o, $(SRC_C)))
+OBJS     = $(OBJ_C)
+
+# Rules to make executable
+$(PRGNAME): $(OBJS)  
+	$(CC) $(CFLAGS) $^ -o $(PRGNAME) $(LDFLAGS)
+
+$(OBJ_C) : %.o : %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+
+clean:
+	rm -f *.o

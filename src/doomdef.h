@@ -113,7 +113,7 @@
 // turn this on by make etc.. DEBUGMODE = 1 or use the Debug profile in the VC++ projects
 //#endif
 #if defined (_WIN32) || (defined (__unix__) && !defined (MSDOS)) || defined(__APPLE__) || defined (UNIXCOMMON) || defined (macintosh)
-#define LOGMESSAGES // write message in log.txt
+//#define LOGMESSAGES // write message in log.txt
 #endif
 
 #ifdef LOGMESSAGES
@@ -534,7 +534,11 @@ INT32 I_GetKey(void);
 #endif
 
 // Max gamepad/joysticks that can be detected/used.
+#ifdef FASTER
+#define MAX_JOYSTICKS 1
+#else
 #define MAX_JOYSTICKS 4
+#endif
 
 #ifndef M_PIl
 #define M_PIl 3.1415926535897932384626433832795029L
@@ -592,14 +596,18 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 //#define SAVEGAME_OTHERVERSIONS
 
 ///	Shuffle's incomplete OpenGL sorting code.
+#if !defined (_NDS) && !defined (_PSP) && !defined (GCW0_OPTS)
 #define SHUFFLE // This has nothing to do with sorting, why was it disabled?
+#endif
 
 ///	Allow the use of the SOC RESETINFO command.
 ///	\note	Builds that are tight on memory should disable this.
 ///	    	This stops the game from storing backups of the states, sprites, and mobjinfo tables.
 ///	    	Though this info is compressed under normal circumstances, it's still a lot of extra
 ///	    	memory that never gets touched.
+#if !defined (_NDS) && !defined (_PSP) && !defined (LOWMEMORY)
 #define ALLOW_RESETDATA
+#endif
 
 /// Experimental tweaks to analog mode. (Needs a lot of work before it's ready for primetime.)
 //#define REDSANALOG
@@ -616,17 +624,23 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 /// on the bright side it fixes some weird issues with translucent walls
 /// \note	SRB2CB port.
 ///      	SRB2CB itself ported this from PrBoom+
+#ifndef FASTER
 #define NEWCLIP
+#endif
 
 /// OpenGL shaders
+#ifndef GCW0_OPTS
 #define GL_SHADERS
+#endif
 
 /// Handle touching sector specials in P_PlayerAfterThink instead of P_PlayerThink.
 /// \note   Required for proper collision with moving sloped surfaces that have sector specials on them.
 #define SECTORSPECIALSAFTERTHINK
 
 /// Sprite rotation
+#ifndef GCW0_OPTS
 #define ROTSPRITE
+#endif
 #define ROTANGLES 72 // Needs to be a divisor of 360 (45, 60, 90, 120...)
 #define ROTANGDIFF (360 / ROTANGLES)
 

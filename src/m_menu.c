@@ -54,7 +54,6 @@
 #include "d_net.h"
 #include "mserv.h"
 #include "m_misc.h"
-#include "m_anigif.h"
 #include "byteptr.h"
 #include "st_stuff.h"
 #include "i_sound.h"
@@ -71,7 +70,9 @@
 #if defined(HAVE_SDL)
 #include "SDL.h"
 #if SDL_VERSION_ATLEAST(2,0,0)
-#include "sdl/sdlmain.h" // JOYSTICK_HOTPLUG
+#include "sdl2/sdlmain.h" // JOYSTICK_HOTPLUG
+#else
+#include "sdl12/sdlmain.h" // JOYSTICK_HOTPLUG
 #endif
 #endif
 
@@ -1332,6 +1333,8 @@ enum
 static menuitem_t OP_VideoOptionsMenu[] =
 {
 	{IT_HEADER, NULL, "Screen", NULL, 0},
+	
+#ifndef GCW0_INPUT
 	{IT_STRING | IT_CALL,  NULL, "Set Resolution...",       M_VideoModeMenu,          6},
 
 #if (defined (__unix__) && !defined (MSDOS)) || defined (UNIXCOMMON) || defined (HAVE_SDL)
@@ -1342,6 +1345,8 @@ static menuitem_t OP_VideoOptionsMenu[] =
 	{IT_STRING | IT_CVAR, NULL, "Renderer",                     &cv_renderer,        21},
 #else
 	{IT_TRANSTEXT | IT_PAIR, "Renderer", "Software",            &cv_renderer,           21},
+#endif
+
 #endif
 
 	{IT_HEADER, NULL, "Color Profile", NULL, 30},
@@ -1553,10 +1558,6 @@ static menuitem_t OP_ScreenshotOptionsMenu[] =
 	{IT_STRING|IT_CVAR|IT_CV_STRING, NULL, "Custom Folder", &cv_movie_folder, 	   75},
 	{IT_STRING|IT_CVAR, NULL, "Capture Mode",      &cv_moviemode,                  90},
 
-	{IT_STRING|IT_CVAR, NULL, "Downscaling",       &cv_gif_downscale,              95},
-	{IT_STRING|IT_CVAR, NULL, "Region Optimizing", &cv_gif_optimize,              100},
-	{IT_STRING|IT_CVAR, NULL, "Local Color Table", &cv_gif_localcolortable,       105},
-
 	{IT_STRING|IT_CVAR, NULL, "Downscaling",       &cv_apng_downscale,             95},
 	{IT_STRING|IT_CVAR, NULL, "Memory Level",      &cv_zlib_memorya,              100},
 	{IT_STRING|IT_CVAR, NULL, "Compression Level", &cv_zlib_levela,               105},
@@ -1571,10 +1572,10 @@ enum
 	op_screenshot_folder = 4,
 	op_movie_folder = 11,
 	op_screenshot_capture = 12,
-	op_screenshot_gif_start = 13,
-	op_screenshot_gif_end = 15,
-	op_screenshot_apng_start = 16,
-	op_screenshot_apng_end = 20,
+	op_screenshot_gif_start = 13-3,
+	op_screenshot_gif_end = 15-3,
+	op_screenshot_apng_start = 16-3,
+	op_screenshot_apng_end = 20-3,
 };
 
 static menuitem_t OP_EraseDataMenu[] =
@@ -2469,10 +2470,6 @@ void Moviemode_mode_Onchange(void)
 
 	switch (cv_moviemode.value)
 	{
-		case MM_GIF:
-			cstart = op_screenshot_gif_start;
-			cend = op_screenshot_gif_end;
-			break;
 		case MM_APNG:
 			cstart = op_screenshot_apng_start;
 			cend = op_screenshot_apng_end;
@@ -3503,6 +3500,9 @@ boolean M_Responder(event_t *ev)
 			return true;
 
 		case KEY_ENTER:
+		#ifdef GCW0_INPUT
+		case KEY_LCTRL:
+		#endif
 			noFurtherInput = true;
 			currentMenu->lastOn = itemOn;
 			if (routine)
@@ -3539,6 +3539,9 @@ boolean M_Responder(event_t *ev)
 			return true;
 
 		case KEY_ESCAPE:
+		#ifdef GCW0_INPUT
+		case KEY_LALT:
+		#endif
 			noFurtherInput = true;
 			currentMenu->lastOn = itemOn;
 

@@ -33,8 +33,6 @@
 
 #include "lua_hook.h"
 
-#include "m_perfstats.h" // ps_checkposition_calls
-
 fixed_t tmbbox[4];
 mobj_t *tmthing;
 static INT32 tmflags;
@@ -2020,8 +2018,6 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 	INT32 xl, xh, yl, yh, bx, by;
 	subsector_t *newsubsec;
 	boolean blockval = true;
-
-	ps_checkposition_calls++;
 
 	I_Assert(thing != NULL);
 #ifdef PARANOIA

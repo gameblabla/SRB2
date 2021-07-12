@@ -29,7 +29,6 @@
 #include "m_menu.h"
 #include "m_cheat.h"
 #include "m_misc.h" // moviemode
-#include "m_anigif.h" // cv_gif_downscale
 #include "p_setup.h" // NiGHTS grading
 
 //random index
@@ -473,151 +472,6 @@ static void ST_DrawNightsOverlayNum(fixed_t x /* right border */, fixed_t y, fix
 
 	// Sorry chum, this function only draws UNSIGNED values!
 	// then why is num not UINT32? ~toast
-}
-
-// Devmode information
-static void ST_drawDebugInfo(void)
-{
-	INT32 height = 0, h = 8, w = 18, lowh;
-	void (*textfunc)(INT32, INT32, INT32, const char *);
-
-	if (!(stplyr->mo && cv_debug))
-		return;
-
-#define VFLAGS V_MONOSPACE|V_SNAPTOTOP|V_SNAPTORIGHT
-
-	if ((moviemode == MM_GIF && cv_gif_downscale.value) || vid.dupx == 1)
-	{
-		textfunc = V_DrawRightAlignedString;
-		lowh = ((vid.height/vid.dupy) - 16);
-	}
-	else
-	{
-		textfunc = V_DrawRightAlignedSmallString;
-		h /= 2;
-		w /= 2;
-		lowh = 0;
-	}
-
-#define V_DrawDebugLine(str) if (lowh && (height > lowh))\
-							{\
-								V_DrawRightAlignedThinString(320,  8+lowh, VFLAGS|V_REDMAP, "SOME INFO NOT VISIBLE");\
-								return;\
-							}\
-							textfunc(320, height, VFLAGS, str);\
-							height += h;
-
-#define V_DrawDebugFlag(f, str) textfunc(width, height, VFLAGS|f, str);\
-								width -= w
-
-	if (cv_debug & DBG_MEMORY)
-	{
-		V_DrawDebugLine(va("Heap: %8sKB", sizeu1(Z_TotalUsage()>>10)));
-
-		height += h/2;
-	}
-
-	if (cv_debug & DBG_RANDOMIZER) // randomizer testing
-	{
-		fixed_t peekres = P_RandomPeek();
-		peekres *= 10000;     // Change from fixed point
-		peekres >>= FRACBITS; // to displayable decimal
-
-		V_DrawDebugLine(va("Init: %08x", P_GetInitSeed()));
-		V_DrawDebugLine(va("Seed: %08x", P_GetRandSeed()));
-		V_DrawDebugLine(va("==  :    .%04d", peekres));
-
-		height += h/2;
-	}
-
-	if (cv_debug & DBG_PLAYER)
-	{
-		INT32 width = 320;
-		const fixed_t d = AngleFixed(stplyr->drawangle);
-
-		V_DrawDebugLine(va("SHIELD: %5x", stplyr->powers[pw_shield]));
-		V_DrawDebugLine(va("SCALE: %5d%%", (stplyr->mo->scale*100)>>FRACBITS));
-		V_DrawDebugLine(va("CARRY: %5x", stplyr->powers[pw_carry]));
-		V_DrawDebugLine(va("AIR: %4d, %3d", stplyr->powers[pw_underwater], stplyr->powers[pw_spacetime]));
-		V_DrawDebugLine(va("ABILITY: %3d, %3d", stplyr->charability, stplyr->charability2));
-		V_DrawDebugLine(va("ACTIONSPD: %5d", stplyr->actionspd>>FRACBITS));
-		V_DrawDebugLine(va("PEEL: %3d", stplyr->dashmode));
-		V_DrawDebugLine(va("SCOREADD: %3d", stplyr->scoreadd));
-
-		// Flags
-		V_DrawDebugFlag(((stplyr->pflags & PF_SHIELDABILITY)  ? V_GREENMAP : V_REDMAP), "SH");
-		V_DrawDebugFlag(((stplyr->pflags & PF_THOKKED)        ? V_GREENMAP : V_REDMAP), "TH");
-		V_DrawDebugFlag(((stplyr->pflags & PF_STARTDASH)      ? V_GREENMAP : V_REDMAP), "ST");
-		V_DrawDebugFlag(((stplyr->pflags & PF_SPINNING)       ? V_GREENMAP : V_REDMAP), "SP");
-		V_DrawDebugFlag(((stplyr->pflags & PF_NOJUMPDAMAGE)   ? V_GREENMAP : V_REDMAP), "ND");
-		V_DrawDebugFlag(((stplyr->pflags & PF_JUMPED)         ? V_GREENMAP : V_REDMAP), "JD");
-		V_DrawDebugFlag(((stplyr->pflags & PF_STARTJUMP)      ? V_GREENMAP : V_REDMAP), "SJ");
-		V_DrawDebugFlag(0, "PF/SF:");
-		height += h;
-		width = 320;
-		V_DrawDebugFlag(((stplyr->pflags & PF_INVIS)          ? V_GREENMAP : V_REDMAP), "*I");
-		V_DrawDebugFlag(((stplyr->pflags & PF_NOCLIP)         ? V_GREENMAP : V_REDMAP), "*C");
-		V_DrawDebugFlag(((stplyr->pflags & PF_GODMODE)        ? V_GREENMAP : V_REDMAP), "*G");
-		V_DrawDebugFlag(((stplyr->charflags & SF_SUPER)       ? V_GREENMAP : V_REDMAP), "SU");
-		V_DrawDebugFlag(((stplyr->pflags & PF_APPLYAUTOBRAKE) ? V_GREENMAP : V_REDMAP), "AA");
-		V_DrawDebugFlag(((stplyr->pflags & PF_SLIDING)        ? V_GREENMAP : V_REDMAP), "SL");
-		V_DrawDebugFlag(((stplyr->pflags & PF_BOUNCING)       ? V_GREENMAP : V_REDMAP), "BO");
-		V_DrawDebugFlag(((stplyr->pflags & PF_GLIDING)        ? V_GREENMAP : V_REDMAP), "GL");
-		height += h;
-
-		V_DrawDebugLine(va("DRAWANGLE: %6d", FixedInt(d)));
-
-		height += h/2;
-	}
-
-	if (cv_debug & DBG_DETAILED)
-	{
-		INT32 width = 320;
-
-		V_DrawDebugLine(va("CEILINGZ: %6d", stplyr->mo->ceilingz>>FRACBITS));
-		V_DrawDebugLine(va("FLOORZ: %6d", stplyr->mo->floorz>>FRACBITS));
-
-		V_DrawDebugLine(va("CMOMX: %6d", stplyr->cmomx>>FRACBITS));
-		V_DrawDebugLine(va("CMOMY: %6d", stplyr->cmomy>>FRACBITS));
-		V_DrawDebugLine(va("PMOMZ: %6d", stplyr->mo->pmomz>>FRACBITS));
-
-		width = 320;
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_APPLYPMOMZ)      ? V_GREENMAP : V_REDMAP), "AP");
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_SPRUNG)          ? V_GREENMAP : V_REDMAP), "SP");
-		//V_DrawDebugFlag(((stplyr->mo->eflags & MFE_PUSHED)          ? V_GREENMAP : V_REDMAP), "PU"); -- not relevant to players
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_GOOWATER)        ? V_GREENMAP : V_REDMAP), "GW");
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_VERTICALFLIP)    ? V_GREENMAP : V_REDMAP), "VF");
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_JUSTSTEPPEDDOWN) ? V_GREENMAP : V_REDMAP), "JS");
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_UNDERWATER)      ? V_GREENMAP : V_REDMAP), "UW");
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_TOUCHWATER)      ? V_GREENMAP : V_REDMAP), "TW");
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_JUSTHITFLOOR)    ? V_GREENMAP : V_REDMAP), "JH");
-		V_DrawDebugFlag(((stplyr->mo->eflags & MFE_ONGROUND)        ? V_GREENMAP : V_REDMAP), "OG");
-		V_DrawDebugFlag(0, "MFE:");
-		height += h;
-
-		V_DrawDebugLine(va("MOMX: %6d", stplyr->rmomx>>FRACBITS));
-		V_DrawDebugLine(va("MOMY: %6d", stplyr->rmomy>>FRACBITS));
-		V_DrawDebugLine(va("MOMZ: %6d", stplyr->mo->momz>>FRACBITS));
-
-		V_DrawDebugLine(va("SPEED: %6d", stplyr->speed>>FRACBITS));
-
-		height += h/2;
-	}
-
-	if (cv_debug & DBG_BASIC)
-	{
-		const fixed_t d = AngleFixed(stplyr->mo->angle);
-		V_DrawDebugLine(va("X: %6d", stplyr->mo->x>>FRACBITS));
-		V_DrawDebugLine(va("Y: %6d", stplyr->mo->y>>FRACBITS));
-		V_DrawDebugLine(va("Z: %6d", stplyr->mo->z>>FRACBITS));
-		V_DrawDebugLine(va("A: %6d", FixedInt(d)));
-
-		//height += h/2;
-	}
-
-#undef V_DrawDebugFlag
-#undef V_DrawDebugLine
-#undef VFLAGS
 }
 
 static void ST_drawScore(void)
@@ -2743,8 +2597,6 @@ static void ST_overlayDrawer(void)
 
 	if (modeattacking && !(demoplayback && hu_showscores))
 		ST_drawInput();
-
-	ST_drawDebugInfo();
 }
 
 void ST_Drawer(void)

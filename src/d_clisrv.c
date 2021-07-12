@@ -44,7 +44,6 @@
 #include "lua_script.h"
 #include "lua_hook.h"
 #include "md5.h"
-#include "m_perfstats.h"
 
 #ifndef NONET
 // cl loading screen
@@ -3775,6 +3774,7 @@ static void HandleServerInfo(SINT8 node)
 
 static void PT_WillResendGamestate(void)
 {
+#ifndef NONET
 	char tmpsave[256];
 
 	if (server || cl_redownloadinggamestate)
@@ -3797,17 +3797,19 @@ static void PT_WillResendGamestate(void)
 	CL_PrepareDownloadSaveGame(tmpsave);
 
 	cl_redownloadinggamestate = true;
+#endif
 }
 
 static void PT_CanReceiveGamestate(SINT8 node)
 {
 	if (client || sendingsavegame[node])
 		return;
-
+	#ifndef NONET
 	CONS_Printf(M_GetText("Resending game state to %s...\n"), player_names[nodetoplayer[node]]);
 
 	SV_SendSaveGame(node, true); // Resend a complete game state
 	resendingsavegame[node] = true;
+	#endif
 }
 
 /** Handles a packet received from a node that isn't in game
@@ -4095,7 +4097,10 @@ static void HandlePacketFromPlayer(SINT8 node)
 			if (realstart <= gametic && realstart + BACKUPTICS - 1 > gametic && gamestate == GS_LEVEL
 				&& consistancy[realstart%BACKUPTICS] != SHORT(netbuffer->u.clientpak.consistancy)
 				&& !resendingsavegame[node] && savegameresendcooldown[node] <= I_GetTime()
-				&& !SV_ResendingSavegameToAnyone())
+				#ifndef NONET
+				&& !SV_ResendingSavegameToAnyone()
+				#endif
+				)
 			{
 				if (cv_resynchattempts.value)
 				{
@@ -4848,14 +4853,10 @@ void TryRunTics(tic_t realtics)
 			{
 				DEBFILE(va("============ Running tic %d (local %d)\n", gametic, localgametic));
 
-				ps_tictime = I_GetPreciseTime();
-
 				G_Ticker((gametic % NEWTICRATERATIO) == 0);
 				ExtraDataTicker();
 				gametic++;
 				consistancy[gametic%BACKUPTICS] = Consistancy();
-
-				ps_tictime = I_GetPreciseTime() - ps_tictime;
 
 				// Leave a certain amount of tics present in the net buffer as long as we've ran at least one tic this frame.
 				if (client && gamestate == GS_LEVEL && leveltime > 3 && neededtic <= gametic + cv_netticbuffer.value)
@@ -4999,10 +5000,11 @@ void NetUpdate(void)
 
 	if (client)
 	{
+		#ifndef NONET
 		// If the client just finished redownloading the game state, load it
 		if (cl_redownloadinggamestate && fileneeded[0].status == FS_FOUND)
 			CL_ReloadReceivedSavegame();
-
+		#endif
 		CL_SendClientCmd(); // Send tic cmd
 		hu_redownloadinggamestate = cl_redownloadinggamestate;
 	}

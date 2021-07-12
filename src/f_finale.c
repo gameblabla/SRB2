@@ -4383,11 +4383,11 @@ static boolean F_GetTextPromptTutorialTag(char *tag, INT32 length)
 			break;
 
 		case gcs_platform:
-			strncat(tag, "PLATFORM", length);
+			strcat(tag, "PLATFORM");
 			break;
 
 		default:
-			strncat(tag, "CUSTOM", length);
+			strcat(tag, "CUSTOM");
 			break;
 	}
 

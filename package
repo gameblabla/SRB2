@@ -1,0 +1,38 @@
+#!/bin/sh
+
+mkdir -p opk
+cp assets_opk/patch.pk3 opk/patch.pk3
+cp assets_opk/patch_music.pk3  opk/patch_music.pk3
+cp assets_opk/srb2.pk3 opk/srb2.pk3
+cp assets_opk/zones.pk3 opk/zones.pk3
+cp ./srb2.elf opk/srb2.elf
+cp assets_opk/music.dta opk/music.dta
+cp assets_opk/player.dta opk/player.dta
+cp assets_opk/icon.png opk/icon.png
+cp -r assets_opk/models opk/
+cp -r assets_opk/models.dat opk/
+# https://unix.stackexchange.com/questions/219268/how-to-add-new-lines-when-using-echo
+print()
+	case    ${IFS- } in
+	(\ *)   printf  %b\\n "$*";;
+	(*)     IFS=\ $IFS
+	printf  %b\\n "$*"
+	IFS=${IFS#?}
+esac
+
+# Create GmenuNx entry file plus other things
+
+print '[Desktop Entry]
+Type=Application
+Name=SRB2 v2.2
+Comment=Platforming game
+Exec=srb2.elf
+Icon=icon
+Terminal=false
+Type=Application
+Categories=games;
+X-OD-NeedsDownscaling=true' > opk/default."$1".desktop
+
+mksquashfs ./opk srb2_"$1".opk -all-root -noappend -no-exports -no-xattrs
+
+rm -r opk

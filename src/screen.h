@@ -39,8 +39,19 @@
 // we try to re-allocate a minimum of buffers for stability of the memory,
 // so all the small-enough tables based on screen size, are allocated once
 // and for all at the maximum size.
+#if defined(RS90) || defined(FUNKEY)
+#define MAXVIDWIDTH 320 //720
+#define MAXVIDHEIGHT 200 //576
+#elif defined(GCW0) || defined(RS1)
+#define MAXVIDWIDTH 640 //720
+#define MAXVIDHEIGHT 480 //576
+#elif defined (GP2X) || defined(BITTBOY)
+#define MAXVIDWIDTH 320 //720
+#define MAXVIDHEIGHT 240 //576
+#else
 #define MAXVIDWIDTH 1920 // don't set this too high because actually
 #define MAXVIDHEIGHT 1200 // lots of tables are allocated with the MAX size.
+#endif
 #define BASEVIDWIDTH 320 // NEVER CHANGE THIS! This is the original
 #define BASEVIDHEIGHT 200 // resolution of the graphics.
 

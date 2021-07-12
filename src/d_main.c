@@ -67,7 +67,6 @@
 #include "keys.h"
 #include "filesrch.h" // refreshdirmenu, mainwadstally
 #include "g_input.h" // tutorial mode control scheming
-#include "m_perfstats.h"
 
 #ifdef CMAKECONFIG
 #include "config.h"
@@ -413,7 +412,6 @@ static void D_Display(void)
 
 			if (!automapactive && !dedicated && cv_renderview.value)
 			{
-				ps_rendercalltime = I_GetPreciseTime();
 				if (players[displayplayer].mo || players[displayplayer].playerstate == PST_DEAD)
 				{
 					topleft = screens[0] + viewwindowy*vid.width + viewwindowx;
@@ -460,7 +458,6 @@ static void D_Display(void)
 					if (postimgtype2)
 						V_DoPostProcessor(1, postimgtype2, postimgparam2);
 				}
-				ps_rendercalltime = I_GetPreciseTime() - ps_rendercalltime;
 			}
 
 			if (lastdraw)
@@ -474,8 +471,6 @@ static void D_Display(void)
 				lastdraw = false;
 			}
 
-			ps_uitime = I_GetPreciseTime();
-
 			if (gamestate == GS_LEVEL)
 			{
 				ST_Drawer();
@@ -484,10 +479,6 @@ static void D_Display(void)
 			}
 			else
 				F_TitleScreenDrawer();
-		}
-		else
-		{
-			ps_uitime = I_GetPreciseTime();
 		}
 	}
 
@@ -528,8 +519,6 @@ static void D_Display(void)
 	// focus lost moved to M_Drawer
 
 	CON_Drawer();
-
-	ps_uitime = I_GetPreciseTime() - ps_uitime;
 
 	//
 	// wipe update
@@ -610,14 +599,7 @@ static void D_Display(void)
 			V_DrawRightAlignedString(BASEVIDWIDTH, BASEVIDHEIGHT-ST_HEIGHT-10, V_YELLOWMAP, s);
 		}
 
-		if (cv_perfstats.value)
-		{
-			M_DrawPerfStats();
-		}
-
-		ps_swaptime = I_GetPreciseTime();
 		I_FinishUpdate(); // page flip or blit buffer
-		ps_swaptime = I_GetPreciseTime() - ps_swaptime;
 	}
 }
 

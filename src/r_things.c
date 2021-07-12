@@ -1515,7 +1515,9 @@ static void R_ProjectSprite(mobj_t *thing)
 			thing->sprite = states[S_UNKNOWN].sprite;
 			thing->frame = states[S_UNKNOWN].frame;
 			sprdef = &sprites[thing->sprite];
+#ifdef ROTSPRITE
 			sprinfo = &spriteinfo[thing->sprite];
+#endif
 			frame = thing->frame&FF_FRAMEMASK;
 		}
 	}

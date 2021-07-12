@@ -23,7 +23,6 @@
 #include "lua_hook.h"
 #include "lua_hud.h" // hud_running errors
 
-#include "m_perfstats.h"
 #include "d_netcmd.h" // for cv_perfstats
 #include "i_system.h" // I_GetPreciseTime
 
@@ -281,7 +280,6 @@ boolean LUAh_MobjHook(mobj_t *mo, enum hook which)
 		if (hookp->type != which)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 			LUA_PushUserdata(gL, mo, META_MOBJ);
 		PushHook(gL, hookp);
@@ -303,7 +301,6 @@ boolean LUAh_MobjHook(mobj_t *mo, enum hook which)
 		if (hookp->type != which)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 			LUA_PushUserdata(gL, mo, META_MOBJ);
 		PushHook(gL, hookp);
@@ -339,7 +336,6 @@ boolean LUAh_PlayerHook(player_t *plr, enum hook which)
 		if (hookp->type != which)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 			LUA_PushUserdata(gL, plr, META_PLAYER);
 		PushHook(gL, hookp);
@@ -484,24 +480,12 @@ void LUAh_ThinkFrame(void)
 		if (hookp->type != hook_ThinkFrame)
 			continue;
 
-		if (cv_perfstats.value == 3)
-			time_taken = I_GetPreciseTime();
 		PushHook(gL, hookp);
 		if (lua_pcall(gL, 0, 0, 1)) {
 			if (!hookp->error || cv_debug & DBG_LUA)
 				CONS_Alert(CONS_WARNING,"%s\n",lua_tostring(gL, -1));
 			lua_pop(gL, 1);
 			hookp->error = true;
-		}
-		if (cv_perfstats.value == 3)
-		{
-			lua_Debug ar;
-			time_taken = I_GetPreciseTime() - time_taken;
-			// we need the function, let's just retrieve it again
-			PushHook(gL, hookp);
-			lua_getinfo(gL, ">S", &ar);
-			PS_SetThinkFrameHookInfo(hook_index, time_taken, ar.short_src);
-			hook_index++;
 		}
 	}
 
@@ -556,7 +540,6 @@ UINT8 LUAh_MobjCollideHook(mobj_t *thing1, mobj_t *thing2, enum hook which)
 		if (hookp->type != which)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, thing1, META_MOBJ);
@@ -587,7 +570,6 @@ UINT8 LUAh_MobjCollideHook(mobj_t *thing1, mobj_t *thing2, enum hook which)
 		if (hookp->type != which)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, thing1, META_MOBJ);
@@ -638,7 +620,6 @@ UINT8 LUAh_MobjLineCollideHook(mobj_t *thing, line_t *line, enum hook which)
 		if (hookp->type != which)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, thing, META_MOBJ);
@@ -669,7 +650,6 @@ UINT8 LUAh_MobjLineCollideHook(mobj_t *thing, line_t *line, enum hook which)
 		if (hookp->type != which)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, thing, META_MOBJ);
@@ -718,7 +698,6 @@ boolean LUAh_MobjThinker(mobj_t *mo)
 	// Look for all generic mobj thinker hooks
 	for (hookp = mobjthinkerhooks[MT_NULL]; hookp; hookp = hookp->next)
 	{
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 			LUA_PushUserdata(gL, mo, META_MOBJ);
 		PushHook(gL, hookp);
@@ -737,7 +716,6 @@ boolean LUAh_MobjThinker(mobj_t *mo)
 
 	for (hookp = mobjthinkerhooks[mo->type]; hookp; hookp = hookp->next)
 	{
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 			LUA_PushUserdata(gL, mo, META_MOBJ);
 		PushHook(gL, hookp);
@@ -780,7 +758,6 @@ boolean LUAh_TouchSpecial(mobj_t *special, mobj_t *toucher)
 		if (hookp->type != hook_TouchSpecial)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, special, META_MOBJ);
@@ -806,7 +783,6 @@ boolean LUAh_TouchSpecial(mobj_t *special, mobj_t *toucher)
 		if (hookp->type != hook_TouchSpecial)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, special, META_MOBJ);
@@ -852,8 +828,6 @@ UINT8 LUAh_ShouldDamage(mobj_t *target, mobj_t *inflictor, mobj_t *source, INT32
 	{
 		if (hookp->type != hook_ShouldDamage)
 			continue;
-
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, target, META_MOBJ);
@@ -889,7 +863,7 @@ UINT8 LUAh_ShouldDamage(mobj_t *target, mobj_t *inflictor, mobj_t *source, INT32
 	{
 		if (hookp->type != hook_ShouldDamage)
 			continue;
-		ps_lua_mobjhooks++;
+
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, target, META_MOBJ);
@@ -947,7 +921,6 @@ boolean LUAh_MobjDamage(mobj_t *target, mobj_t *inflictor, mobj_t *source, INT32
 		if (hookp->type != hook_MobjDamage)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, target, META_MOBJ);
@@ -979,7 +952,6 @@ boolean LUAh_MobjDamage(mobj_t *target, mobj_t *inflictor, mobj_t *source, INT32
 		if (hookp->type != hook_MobjDamage)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, target, META_MOBJ);
@@ -1032,7 +1004,6 @@ boolean LUAh_MobjDeath(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 
 		if (hookp->type != hook_MobjDeath)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, target, META_MOBJ);
@@ -1062,7 +1033,6 @@ boolean LUAh_MobjDeath(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 
 		if (hookp->type != hook_MobjDeath)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, target, META_MOBJ);
@@ -1255,7 +1225,6 @@ boolean LUAh_LinedefExecute(line_t *line, mobj_t *mo, sector_t *sector)
 		if (strcmp(hookp->s.str, line->stringargs[0]))
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, line, META_LINE);
@@ -1433,7 +1402,6 @@ boolean LUAh_MapThingSpawn(mobj_t *mo, mapthing_t *mthing)
 		if (hookp->type != hook_MapThingSpawn)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, mo, META_MOBJ);
@@ -1459,7 +1427,6 @@ boolean LUAh_MapThingSpawn(mobj_t *mo, mapthing_t *mthing)
 		if (hookp->type != hook_MapThingSpawn)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, mo, META_MOBJ);
@@ -1504,7 +1471,6 @@ boolean LUAh_FollowMobj(player_t *player, mobj_t *mobj)
 		if (hookp->type != hook_FollowMobj)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, player, META_PLAYER);
@@ -1530,7 +1496,6 @@ boolean LUAh_FollowMobj(player_t *player, mobj_t *mobj)
 		if (hookp->type != hook_FollowMobj)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, player, META_PLAYER);
@@ -1571,7 +1536,6 @@ UINT8 LUAh_PlayerCanDamage(player_t *player, mobj_t *mobj)
 		if (hookp->type != hook_PlayerCanDamage)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 		{
 			LUA_PushUserdata(gL, player, META_PLAYER);
@@ -1992,7 +1956,6 @@ fixed_t LUAh_PlayerHeight(player_t *player)
 		if (hookp->type != hook_PlayerHeight)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 			LUA_PushUserdata(gL, player, META_PLAYER);
 		PushHook(gL, hookp);
@@ -2036,7 +1999,6 @@ UINT8 LUAh_PlayerCanEnterSpinGaps(player_t *player)
 		if (hookp->type != hook_PlayerCanEnterSpinGaps)
 			continue;
 
-		ps_lua_mobjhooks++;
 		if (lua_gettop(gL) == 1)
 			LUA_PushUserdata(gL, player, META_PLAYER);
 		PushHook(gL, hookp);
